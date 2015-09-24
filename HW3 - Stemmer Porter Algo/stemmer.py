@@ -31,9 +31,9 @@ def step1bhelper(word,m):
 		word = re.sub(r'iz$', r'ize$', word)
 	elif re.search(r'([^lsz])\1$', word):
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
-	elif re.search(r'([^aeiouy]|[aeiou]y)([aeiou]|[^aeiou]y)(^([aeiouwxy]|[^aeiou]y))', word) and m = 1:
+	elif re.search(r'([b-df-hj-np-tv-xz]|[aeiou]y|^y)([aeiou]|[^aeiou]y)[b-df-hj-np-tvz]$', word) and m = 1:
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
-	### STILL NOT WORKING. NEED TO LOOK AT
+	### STILL NOT WORKING. NEED TO LOOK AT. Neer there. only need to resolve lyd (readahead? combined?)
 	return word
 
 def step1c(word, m):
