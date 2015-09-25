@@ -42,55 +42,78 @@ def step1c(word, m):
 	return word
 
 def step2(word, m):
-	if re.search(r'ational$', word) and m > 0:
-		word = re.sub(r'ational$', r'ate$', word)
-	elif re.search(r'tional$', word) and m > 0:
-		word = re.sub(r'tional$', r'tion$', word)
-	elif re.search(r'enci$', word) and m > 0:
-		word = re.sub(r'enci$', r'ence$', word)
-	elif re.search(r'anci$', word) and m > 0:
-		word = re.sub(r'anci$', r'ance$', word)
-	elif re.search(r'izer$', word) and m > 0:
-		word = re.sub(r'izer$', r'ize$', word)
-	elif re.search(r'abli$', word) and m > 0:
-		word = re.sub(r'abli$', r'able$', word)
-	elif re.search(r'alli$', word) and m > 0:
-		word = re.sub(r'alli$', r'al$', word)
-	elif re.search(r'entli$', word) and m > 0:
-		word = re.sub(r'entli$', r'ent$', word)
-	elif re.search(r'eli$', word) and m > 0:
-		word = re.sub(r'eli$', r'e$', word)
-	elif re.search(r'ousli$', word) and m > 0:
-		word = re.sub(r'ousli$', r'ous$', word)
-	elif re.search(r'ization$', word) and m > 0:
-		word = re.sub(r'ization$', r'ize$', word)
-	elif re.search(r'ation$', word) and m > 0:
-		word = re.sub(r'ation$', r'ate$', word)
-	elif re.search(r'ator$', word) and m > 0:
-		word = re.sub(r'ator$', r'ate$', word)
-	elif re.search(r'alism$', word) and m > 0:
-		word = re.sub(r'alism$', r'al$', word)
-	elif re.search(r'iveness$', word) and m > 0:
-		word = re.sub(r'iveness$', r'ive$', word)
-	elif re.search(r'fulness$', word) and m > 0:
-		word = re.sub(r'fulness$', r'ful$', word)
-	elif re.search(r'ousness$', word) and m > 0:
-		word = re.sub(r'ousness$', r'ous$', word)
-	elif re.search(r'aliti$', word) and m > 0:
-		word = re.sub(r'aliti$', r'al$', word)
-	elif re.search(r'iviti$', word) and m > 0:
-		word = re.sub(r'iviti$', r'ive$', word)
-	elif re.search(r'biliti$', word) and m > 0:
-		word = re.sub(r'biliti$', r'ble$', word)
+    if m > 0:
+        if re.search(r'ational$', word):
+            word = re.sub(r'ational$', r'ate$', word)
+        elif re.search(r'tional$', word):
+            word = re.sub(r'tional$', r'tion$', word)
+        elif re.search(r'enci$', word):
+            word = re.sub(r'enci$', r'ence$', word)
+        elif re.search(r'anci$', word):
+            word = re.sub(r'anci$', r'ance$', word)
+        elif re.search(r'izer$', word):
+            word = re.sub(r'izer$', r'ize$', word)
+        elif re.search(r'abli$', word):
+            word = re.sub(r'abli$', r'able$', word)
+        elif re.search(r'alli$', word):
+            word = re.sub(r'alli$', r'al$', word)
+        elif re.search(r'entli$', word):
+            word = re.sub(r'entli$', r'ent$', word)
+        elif re.search(r'eli$', word):
+            word = re.sub(r'eli$', r'e$', word)
+        elif re.search(r'ousli$', word):
+            word = re.sub(r'ousli$', r'ous$', word)
+        elif re.search(r'ization$', word):
+            word = re.sub(r'ization$', r'ize$', word)
+        elif re.search(r'ation$', word):
+            word = re.sub(r'ation$', r'ate$', word)
+        elif re.search(r'ator$', word):
+            word = re.sub(r'ator$', r'ate$', word)
+        elif re.search(r'alism$', word):
+            word = re.sub(r'alism$', r'al$', word)
+        elif re.search(r'iveness$', word):
+            word = re.sub(r'iveness$', r'ive$', word)
+        elif re.search(r'fulness$', word):
+            word = re.sub(r'fulness$', r'ful$', word)
+        elif re.search(r'ousness$', word):
+            word = re.sub(r'ousness$', r'ous$', word)
+        elif re.search(r'aliti$', word):
+            word = re.sub(r'aliti$', r'al$', word)
+        elif re.search(r'iviti$', word):
+            word = re.sub(r'iviti$', r'ive$', word)
+        elif re.search(r'biliti$', word):
+            word = re.sub(r'biliti$', r'ble$', word)
 	return word
 
+def step3(word, m):
+    if m > 0:
+        if re.search(r'(icate|iciti|ical)$', word):
+            word = re.sub(r'(icate|iciti|ical)$', r'ic$', word)
+        elif re.search(r'(ative|ful|ness)$', word):
+            word = re.sub(r'(ative|ful|ness)$', r'$', word)
+        elif re.search(r'alize$', word):
+            word = re.sub(r'alize$', r'al$', word)
+    return word
+
+def step4(word, m):
+    if m > 1:
+        if re.search(r'(al|ance|ence|er|ic|able|ible|ant|ement)$', word):
+            word = re.sub(r'(al|ance|ence|er|ic|able|ible|ant|ement)$', r'$', word)
+        elif re.search(r'(ment|ent|ou|ism|ate|iti|ous|ive|ize)$', word):
+            word = re.sub(r'(ment|ent|ou|ism|ate|iti|ous|ive|ize)$', r'$', word)
+        elif re.search(r'[st]ion$', word):
+            word = re.sub(r'[st]ion$', r'$', word)
+    return word
+    
 def main():
 	# word is input
 	word = word.lower()
 	word = step1a(word, m)
-	word = step1b(word,m)
-	word = step1c(word,m)
-	word = step2(word,m)
+	word = step1b(word, m)
+	word = step1c(word, m)
+	word = step2(word, m)
+    word = step3(word, m)
+    word = step4(word, m)
 
 
 if __name__ == "__main__":
