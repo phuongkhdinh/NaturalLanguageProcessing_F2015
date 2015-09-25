@@ -1,12 +1,17 @@
 import re
 
+# Determine number of VC repetitions in a given word
+def calculateM(word):
+    # TODO
+    return 0
+
 def step1a(word, m):
 	if re.search(r'sses$', word):
 		word = re.sub(r'sses$', r'ss$', word)
 	elif re.search(r'ies$', word):
 		word = re.sub(r'ies$', r'i$', word)
 	elif re.search(r'ss$', word):
-		break
+		pass
 	elif re.search(r's$', word):
 		word = re.sub(r's$', r'$', word)	
 	return word
@@ -31,7 +36,9 @@ def step1bhelper(word,m):
 		word = re.sub(r'iz$', r'ize$', word)
 	elif re.search(r'([^lsz])\1$', word):
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
-	elif re.search(r'([b-df-hj-np-tv-xz]|[aeiou]y|^y)[aeiouy][b-df-hj-np-tvz]$', word) and m = 1:
+    # This rule needs work...should match 'yay' but doesn't. -- doesn't match y as first letter
+    # Is ^ being read as 'not' instead of 'start of string'? --
+	elif re.search(r'([b-df-hj-np-tv-xz]|[aeiou]y|^y)[aeiouy][b-df-hj-np-tvz]$', word) and m == 1:
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
 	### I think work. For young, would y be considered vowel of consonent? if consonent then this should be correct
 	return word
@@ -83,7 +90,7 @@ def step2(word, m):
             word = re.sub(r'iviti$', r'ive$', word)
         elif re.search(r'biliti$', word):
             word = re.sub(r'biliti$', r'ble$', word)
-	return word
+    return word
 
 def step3(word, m):
     if m > 0:
@@ -104,17 +111,33 @@ def step4(word, m):
         elif re.search(r'[st]ion$', word):
             word = re.sub(r'[st]ion$', r'$', word)
     return word
+
+def step5a(word, m):
+    if re.search(r'e$', word) and m > 1:
+        word = re.sub(r'e$', r'$', word)
+    #### THIS RULE IS WRONG -- should be opposite of the rule in step1bhelper
+    #elif re.search(r'[^(([b-df-hj-np-tv-xz]|[aeiou]y|^y)[aeiouy][b-df-hj-np-tvz])]$', word) and m == 1:
+    #    word = re.sub(r'e$', r'$', word)
+    return word
+
+def step5b(word, m):
+    if re.search(r'll$', word) and m > 1:
+        word = re.sub(r'l$', r'$', word)
     
 def main():
-	# word is input
+	userInput = input().split()
+	word = userInput[0]
+	m = int(userInput[1])
 	word = word.lower()
 	word = step1a(word, m)
 	word = step1b(word, m)
 	word = step1c(word, m)
 	word = step2(word, m)
-    word = step3(word, m)
-    word = step4(word, m)
-
+	word = step3(word, m)
+	word = step4(word, m)
+	word = step5a(word, m)
+	word = step5b(word, m)
+	print(word)
 
 if __name__ == "__main__":
 	main()
