@@ -1,10 +1,5 @@
 import re
 
-# Determine number of VC repetitions in a given word
-def calculateM(word):
-    # TODO
-    return 0
-
 def step1a(word, m):
 	if re.search(r'sses$', word):
 		word = re.sub(r'sses$', r'ss$', word)
@@ -36,8 +31,6 @@ def step1bhelper(word,m):
 		word = re.sub(r'iz$', r'ize$', word)
 	elif re.search(r'([^lsz])\1$', word):
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
-    # This rule needs work...should match 'yay' but doesn't. -- doesn't match y as first letter
-    # Is ^ being read as 'not' instead of 'start of string'? --
 	elif re.search(r'([b-df-hj-np-tv-xz]|[aeiou]y|^y)[aeiouy][b-df-hj-np-tvz]$', word) and m == 1:
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
 	### I think work. For young, would y be considered vowel of consonent? if consonent then this should be correct
@@ -123,6 +116,39 @@ def step5a(word, m):
 def step5b(word, m):
     if re.search(r'll$', word) and m > 1:
         word = re.sub(r'l$', r'$', word)
+		
+# Determine number of VC repetitions in a given word
+# FIX -- always returns 1???
+def calculateM(word):
+	# First resolve all y's as consonants or vowels
+	word = resolveY(word)
+	m = 0
+	# Now count (VC) repetitions
+	while word != '':
+		if re.search(r'[aeiou]+[b-df-hj-np-tv-z]+', word):
+			word = re.sub(r'[aeiou]+[b-df-hj-np-tv-z]+', r'', word)
+			m += 1
+		else:
+			break
+	return m
+
+# Changes each occurrence of 'y' to 'z' if it serves as a consonant and 'a' if it serves as a vowel
+def resolveY(word):
+	# First resolve all y's as consonants or vowels
+	while re.search(r'y', word):
+		# y starts word --> y is consonant
+		if re.search(r'^y', word):
+			word = re.sub(r'^y', r'z', word)
+		# y follows vowel --> y is consonant
+		elif re.search(r'[aeiou]y', word):
+			print(word)
+			word = re.sub(r'([aeiou])y', r'\1z', word)
+		# y follows consonant --> y is vowel
+		elif re.search(r'[b-df-hj-np-tv-z]y', word):
+			word = re.sub(r'([b-df-hj-np-tv-z])y', r'\1a', word)
+		else:
+			print('ERROR no y matches')
+	return word
     
 def main():
 	userInput = input().split()
