@@ -32,7 +32,7 @@ def step1bhelper(word,m):
 	elif re.search(r'([^lsz])\1$', word):
 		word = re.sub(r'([^lsz])\1$', r'\1', word)	
 	elif re.search(r'([b-df-hj-np-tv-xz]|[aeiou]y|^y)[aeiouy][b-df-hj-np-tvz]$', word) and m == 1:
-		word = re.sub(r'([^lsz])\1$', r'\1', word)	
+		word = re.sub(r'([b-df-hj-np-tv-xz]|[aeiou]y|^y)[aeiouy][b-df-hj-np-tvz]$', r'e$', word)	
 	### I think work. For young, would y be considered vowel of consonent? if consonent then this should be correct
 	return word
 
@@ -124,6 +124,7 @@ def calculateM(word):
 	word = resolveY(word)
 	m = 0
 	# Now count (VC) repetitions
+	# Instead of while loops, what about doing a reluctant regex match and count the number of item in the list that is returned?
 	while word != '':
 		if re.search(r'[aeiou]+[b-df-hj-np-tv-z]+', word):
 			word = re.sub(r'[aeiou]+[b-df-hj-np-tv-z]+', r'', word)
