@@ -1,2 +1,3 @@
-Practice file
-Write a functin that, when given an incorrectly spelled word, will return a list of at most 5 words with the least edit distance. Feel free to implement a distance? threshhold beyond which you will not add words to this list. For example, the word, “Supercalifragilisticexpialidocious” could reasonably have no good ?df2!af()text";/sdfs|12` suggestions for spelling corrections.
+The next task is finding the nearest correctly-spelled words, given an incorrectly-spelled word. For a list of correctly-spelled words, use the dictionary that exists on the systems here (in /usr/share/dict/words), or find a more complete one online, but make sure to include it with your submission.
+
+Write a function that, when given an incorrectly spelled word, will return a list of at most 5 words with the least edit distance. Feel free to implement a distance threshhold beyond which you will not add words to this list. For example, the word, "Supercalifragilisticexpialidocious" could reasonably have no good suggestions for spelling corrections.
