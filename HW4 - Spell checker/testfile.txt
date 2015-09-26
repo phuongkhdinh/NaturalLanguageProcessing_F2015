@@ -1,0 +1,2 @@
+Practice file
+Write a functin that, when given an incorrectly spelled word, will return a list of at most 5 words with the least edit distance. Feel free to implement a distance? threshhold beyond which you will not add words to this list. For example, the word, “Supercalifragilisticexpialidocious” could reasonably have no good ?df2!af()text";/sdfs|12` suggestions for spelling corrections.
