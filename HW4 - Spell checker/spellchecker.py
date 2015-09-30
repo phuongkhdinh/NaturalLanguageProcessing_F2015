@@ -7,6 +7,15 @@ import re
 import sys
 #from sets import Set
 
+def matchInFirstThreeLetters(target, source):
+	if target[0] == (source[0] or source[1] or source[2]):
+		return True
+	elif target[1] == (source[0] or source[1] or source[2]):
+		return True
+	elif target[2] == (source[0] or source[1] or source[2]):
+		return True
+	return False
+
 def minEditDistance(target, source):
     n = len(target)
     m = len(source)
@@ -60,10 +69,14 @@ def getFiveSuggestions(misspelledWord, dictionary):
     for i in range(-1,2):
         try:
             for altWord in dictionary[len(misspelledWord) + i]:
-                lowestEditDistance.sort()
-                editDistance = minEditDistance(altWord, misspelledWord)
-                if editDistance < lowestEditDistance[4][0]:
-                    lowestEditDistance[4] = (editDistance, altWord)
+				# Only check edit distance if target & source share >=1 of first three letters
+                if matchInFirstThreeLetters(altWord, misspelledWord):
+                    lowestEditDistance.sort()
+                    editDistance = minEditDistance(altWord, misspelledWord)
+                    if editDistance < lowestEditDistance[4][0]:
+                        lowestEditDistance[4] = (editDistance, altWord)
+                    else:
+                        pass
         except IndexError:
             pass
     return lowestEditDistance

@@ -1,5 +1,3 @@
-# Common misspellings, source http://www.oxforddictionaries.com/words/common-misspellings
-
 accomodate
 accomodation
 acheive
@@ -112,3 +110,5 @@ untill
 wierd
 whereever
 wich
+
+source http://www.oxforddictionaries.com/words/common-misspellings
