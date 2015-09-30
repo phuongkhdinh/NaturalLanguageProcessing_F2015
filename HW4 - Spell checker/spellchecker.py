@@ -31,9 +31,15 @@ def delCost(sourceLetter):
     return 1
 
 def subCost(sourceLetter, targetLetter):
-    if (sourceLetter == targetLetter):
-        return 0
-    return 2
+	if (sourceLetter == targetLetter):
+		return 0
+	# Reduce substitution cost for common letter substitutions in spelling mistakes
+	elif sourceLetter + targetLetter == ("ae" or "ea"):
+		return 0.5
+	elif sourceLetter + targetLetter == ("ai" or "ia" or "mn" or "nm" or \
+										 "ie" or "ei" or "oe" or "eo"):
+		return 1
+	return 2
 
 def importDictionary():
     wordList = open("/usr/share/dict/words","r")
@@ -106,9 +112,9 @@ def main():
             if len(word) < 32: #
                 if not re.match(r'^[0-9.,]*$', word):
                     if not word in dictionary[len(word)]:
-                        print('Mis-spelled word: ', word)
+                        print('Mis-spelled word: ', word, "\n")
                         print('Context: ', line)
-                        print('Suggestion')
+                        print('Suggestions:')
                         # call function to get 5 suggestions
                         suggestionsArr = getFiveSuggestions(word, dictionary)
                         for i in range(5):
