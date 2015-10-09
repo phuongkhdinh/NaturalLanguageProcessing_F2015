@@ -1,3 +1,7 @@
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.ArrayList;
+
 public class Classifier {
 
 	public Classifier() { // constructor
@@ -71,8 +75,40 @@ public class Classifier {
 
 	}
 
-	public String[] tokenize(String text) {
-
+    /* Tokenizes raw text into tokens.
+       Removes ()";|`#:%^*_+=~{}<>[]
+       Removes commas within numbers
+       Removes single quotes from around words
+       Treats each punctuation character in .?! as its own token */
+	public ArrayList<String> tokenize(String text) {
+        // NEED TO ADD IN REMOVING "
+        String tokenizedLine = text.replaceAll("[\\(\\);\\|`#:%\\^\\*_\\+=~\\{\\}<>\\[\\]]", "");
+        tokenizedLine = tokenizedLine.replaceAll("([^0-9]),", "\1");
+        tokenizedLine = tokenizedLine.replaceAll(",([^0-9])", "\1");
+        tokenizedLine = tokenizedLine.replaceAll("^'", "");
+        tokenizedLine = tokenizedLine.replaceAll("([^A-Za-z0-9])'", "\1");
+        tokenizedLine = tokenizedLine.replaceAll("('|:|-)$", "");
+        tokenizedLine = tokenizedLine.replaceAll("('|:|-)([^A-Za-z0-9])", " \2");
+        String[] rawTokens = tokenizedLine.split("\\s+"); // split by any whitespace
+        ArrayList<String> tokensList = new ArrayList<String>(); 
+        
+        String endsWithPunct = "([^\\.]*)([\\.\\?!]+)"; // 0+ non-punctuations followed by 1+ punctuation
+        Pattern punctPattern = Pattern.compile(endsWithPunct);
+        for (int i = 0; i < rawTokens.length; i++) {
+            Matcher m = punctPattern.matcher(rawTokens[i]);
+            if (m.find()) { // if token ends with at least one punctuation, split into separate tokens
+                String nonPunct = m.group(1);
+                String punct = m.group(2);
+                tokensList.add(nonPunct);
+                for (i = 0; i < punct.length(); i++) {
+                    tokensList.add(punct.substring(i, i+1));
+                }
+            }
+            else {
+                tokensList.add(rawTokens[i]);
+            }
+        }
+        return tokensList;
 	}
 
 	public LanguageModel train(String author, String[] trainText) {
