@@ -6,18 +6,30 @@ import java.util.Scanner;
 public class Tokenizer {
     
 	public ArrayList<String> tokenize(String text) {
-        // NEED TO ADD IN REMOVING "
-        String tokenizedLine = text.replaceAll("[\\(\\);\\|`#:%\\^\\*_\\+=~\\{\\}<>\\[\\]]", "");
+
+        // Remove ;"|`#:%^*_+=~{}<>[]()
+        String tokenizedLine = text.replaceAll("[\"\\(\\);\\|`#:%\\^\\*_\\+=~\\{\\}<>\\[\\]]", "");
+         
+        // Remove commas except within numbers
         tokenizedLine = tokenizedLine.replaceAll("([^0-9]),", "\1");
         tokenizedLine = tokenizedLine.replaceAll(",([^0-9])", "\1");
+           
+        // Remove single quotes from around words
         tokenizedLine = tokenizedLine.replaceAll("^'", "");
         tokenizedLine = tokenizedLine.replaceAll("([^A-Za-z0-9])'", "\1");
+           
+        // Treats each punctuation character in .?! as its own token   
         tokenizedLine = tokenizedLine.replaceAll("('|:|-)$", "");
         tokenizedLine = tokenizedLine.replaceAll("('|:|-)([^A-Za-z0-9])", " \2");
+           
+        
         String[] rawTokens = tokenizedLine.split("\\s+"); // split by any whitespace
         ArrayList<String> tokensList = new ArrayList<String>(); 
         
-        String endsWithPunct = "([^\\.]*)([\\.\\?!]+)"; // 0+ non-punctuations followed by 1+ punctuation
+        // TODO!!! Remove punctuation .!? from everywhere except end of token
+        // TODO test tokenization of multiple tokens ending with punct, ex "test! this."
+        
+        String endsWithPunct = "([^\\.\\?!]*)([\\.\\?!]+)$"; // 0+ non-punctuations followed by 1+ punctuation
         Pattern punctPattern = Pattern.compile(endsWithPunct);
         for (int i = 0; i < rawTokens.length; i++) {
             Matcher m = punctPattern.matcher(rawTokens[i]);
