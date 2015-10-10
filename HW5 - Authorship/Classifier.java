@@ -83,7 +83,8 @@ public class Classifier {
             BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
-                System.out.println(inputLine);
+                pageText.append(inputLine);
+                pageText.append("\n");
             }
             in.close();
         }
@@ -190,9 +191,9 @@ public class Classifier {
 		}
         
         /* Code snippet to test getting text from URL */
-        //Classifier c = new Classifier();
-        //String text = c.getText("http://www.cs.carleton.edu/faculty/aexley/authors/austen.txt");
-        //System.out.println(text);
+        Classifier c = new Classifier();
+        String text = c.getText("http://www.cs.carleton.edu/faculty/aexley/authors/austen.txt");
+        System.out.println(text);
 
 	}
 }
