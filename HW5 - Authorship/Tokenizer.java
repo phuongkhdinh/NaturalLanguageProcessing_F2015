@@ -7,41 +7,39 @@ public class Tokenizer {
     
 	public ArrayList<String> tokenize(String text) {
 
-        // Remove ;"|`#:%^*_+=~{}<>[]()
-        String tokenizedLine = text.replaceAll("[\"\\(\\);\\|`#:%\\^\\*_\\+=~\\{\\}<>\\[\\]]", "");
-         
-        // Remove commas except within numbers
-        tokenizedLine = tokenizedLine.replaceAll("([^0-9]),", "\1");
-        tokenizedLine = tokenizedLine.replaceAll(",([^0-9])", "\1");
+        // Remove $,;"|`#:%^*_+=~{}<>[]()
+        String tokenizedLine = text.replaceAll("[$,\"\\(\\);\\|`#:%\\^\\*_\\+=~\\{\\}<>\\[\\]]", "");
            
         // Remove single quotes from around words
-        tokenizedLine = tokenizedLine.replaceAll("^'", "");
-        tokenizedLine = tokenizedLine.replaceAll("([^A-Za-z0-9])'", "\1");
-           
-        // Treats each punctuation character in .?! as its own token   
-        tokenizedLine = tokenizedLine.replaceAll("('|:|-)$", "");
-        tokenizedLine = tokenizedLine.replaceAll("('|:|-)([^A-Za-z0-9])", " \2");
-           
+        tokenizedLine = tokenizedLine.replaceAll("' ", " ");
+        tokenizedLine = tokenizedLine.replaceAll(" '", " ");
+        tokenizedLine = tokenizedLine.replaceAll("'$", " ");
+        tokenizedLine = tokenizedLine.replaceAll("^'", " ");           
         
         String[] rawTokens = tokenizedLine.split("\\s+"); // split by any whitespace
-        ArrayList<String> tokensList = new ArrayList<String>(); 
+        ArrayList<String> tokensList = new ArrayList<String>(); // to hold sanitized tokens
         
         // TODO!!! Remove punctuation .!? from everywhere except end of token
         // TODO test tokenization of multiple tokens ending with punct, ex "test! this."
         
-        String endsWithPunct = "([^\\.\\?!]*)([\\.\\?!]+)$"; // 0+ non-punctuations followed by 1+ punctuation
+        // Treats each punctuation character in .?! as its own token 
+        String endsWithPunct = "([^\\.\\?!]*)([\\.\\?!]+)([^\\.\\?!\\s$]*)"; // 0+ non-punctuations followed by 1+ punctuation
         Pattern punctPattern = Pattern.compile(endsWithPunct);
         for (int i = 0; i < rawTokens.length; i++) {
             Matcher m = punctPattern.matcher(rawTokens[i]);
             if (m.find()) { // if token ends with at least one punctuation, split into separate tokens
                 String nonPunct = m.group(1);
                 String punct = m.group(2);
+                String postPunct = m.group(3);
                 tokensList.add(nonPunct);
-                for (i = 0; i < punct.length(); i++) {
-                    tokensList.add(punct.substring(i, i+1));
+                for (int j = 0; j < punct.length(); j++) {
+                    tokensList.add(punct.substring(j, j+1));
+                } 
+                if (!postPunct.equals("")) {
+                    tokensList.add(postPunct);
                 }
             }
-            else {
+            else { // no punctuation in token
                 tokensList.add(rawTokens[i]);
             }
         }
