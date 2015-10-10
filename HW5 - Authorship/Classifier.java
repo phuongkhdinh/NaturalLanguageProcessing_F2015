@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.net.MalformedURLException;
 import java.net.URL;
-
+import java.net.*;
+import java.io.*;
 
 public class Classifier {
 
@@ -72,9 +73,26 @@ public class Classifier {
 
 	}
 
-	public String getText(String url) {
-        return "";
-	}
+    /* Connects to URL and extracts text from the webpage 
+       Adapted from http://docs.oracle.com/javase/tutorial/networking/urls/readingURL.html */
+	public String getText(String urlAddress) {
+        URL url;
+        StringBuilder pageText = new StringBuilder();
+        try {
+            url = new URL(urlAddress);
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println(inputLine);
+            }
+            in.close();
+        }
+        catch (Exception e) {
+            System.err.println(e);
+            System.err.println("Error: Could not read from URL " + urlAddress);
+        }
+        return pageText.toString();
+    }
 
 	public String[] extractDevSet(String text) {
         return new String[0];
@@ -170,6 +188,11 @@ public class Classifier {
 		else {
 			System.out.println("Please provide [-dev authorlist] or [-test authorlist testset.txt]");
 		}
+        
+        /* Code snippet to test getting text from URL */
+        //Classifier c = new Classifier();
+        //String text = c.getText("http://www.cs.carleton.edu/faculty/aexley/authors/austen.txt");
+        //System.out.println(text);
 
 	}
 }
