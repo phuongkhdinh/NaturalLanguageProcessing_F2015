@@ -73,7 +73,7 @@ public class Classifier {
 
 	}
 
-    /* Connects to URL and extracts text from the webpage 
+    /* Connects to URL and returns text as String from the webpage 
        Adapted from http://docs.oracle.com/javase/tutorial/networking/urls/readingURL.html */
 	public String getText(String urlAddress) {
         URL url;
@@ -113,9 +113,6 @@ public class Classifier {
         
         String[] rawTokens = tokenizedLine.split("\\s+"); // split by any whitespace
         ArrayList<String> tokensList = new ArrayList<String>(); // to hold sanitized tokens
-        
-        // TODO!!! Remove punctuation .!? from everywhere except end of token
-        // TODO test tokenization of multiple tokens ending with punct, ex "test! this."
         
         // Treats each punctuation character in .?! as its own token 
         String endsWithPunct = "([^\\.\\?!]*)([\\.\\?!]+)([^\\.\\?!\\s$]*)"; // 0+ non-punctuations followed by 1+ punctuation
@@ -191,9 +188,9 @@ public class Classifier {
 		}
         
         /* Code snippet to test getting text from URL */
-        Classifier c = new Classifier();
-        String text = c.getText("http://www.cs.carleton.edu/faculty/aexley/authors/austen.txt");
-        System.out.println(text);
+        //Classifier c = new Classifier();
+        //String text = c.getText("http://www.cs.carleton.edu/faculty/aexley/authors/austen.txt");
+        //System.out.println(text);
 
 	}
 }
