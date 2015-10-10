@@ -1,6 +1,10 @@
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 
 public class Classifier {
 
@@ -19,14 +23,15 @@ public class Classifier {
 
 		public LanguageModel(String auth, String[] text) {
 			author = auth;
-			unigram = createUnigram(String[] text);
-			bigram = createBigram(String[] text);
-			trigram = createTrigram(String[] text);
+			unigram = createUnigram(text);
+			bigram = createBigram(text);
+			trigram = createTrigram(text);
 		}
 
 		public HashMap<String, Integer> createUnigram(String[] text) {
 			HashMap<String, Integer> unigram = new HashMap<String, Integer>();
-			for (word : text) {
+			for (int i = 0; i < text.length; i++) {
+                String word = text[i];
 				if (unigram.containsKey(word)) {
 					unigram.put(word, unigram.get(word) + 1); // add one to the current count
 				}
@@ -68,11 +73,11 @@ public class Classifier {
 	}
 
 	public String getText(String url) {
-
+        return "";
 	}
 
 	public String[] extractDevSet(String text) {
-
+        return new String[0];
 	}
 
     /* Tokenizes raw text into an ArrayList of tokens. */
@@ -118,13 +123,14 @@ public class Classifier {
 	}
 
 	public LanguageModel train(String author, String[] trainText) {
-
+        return null;
 	}
 
 	public String test(LanguageModel[] lms, String sentence) {
 		//    tokenize
 		//    compare this sentence against all language models
 		//    find author/model with highest probability
+        return "";
 	}
 
 	public HashMap<String, Integer[]> devTest(LanguageModel[] lms, HashMap<String, String> testText) {
@@ -136,29 +142,31 @@ public class Classifier {
 		//    if we correctly identify the language model, add one to correct count
 		//   Calculate the percentage of correctly identified sentences
 		// Return results
+        return new HashMap<String, Integer[]>();
 
 	}
 
 	public LanguageModel[] buildLanguageModels(String authorList) {
-
+        return null;
 	}
 
 
 
 	public static void main(String[] args) {
-		if (args[0].equals("-dev") && args.length == 2) {
-			// create lang models
-			// test on dev set, print result
+        if (args.length > 0 && (args[0].equals("-dev") || args[0].equals("-test"))) {
+            if (args[0].equals("-dev") && args.length == 2) {
+                // create lang models
+                // test on dev set, print result
 
-		}
+            }
 
-		else if (args[0].equals("-test") && args.length == 3) {
-			// create lang models
-			// for each sentence in test set: 
-			//     test(lms, sentence)
-			//     print most probable author
-		}
-
+            else if (args[0].equals("-test") && args.length == 3) {
+                // create lang models
+                // for each sentence in test set: 
+                //     test(lms, sentence)
+                //     print most probable author
+            }
+        }
 		else {
 			System.out.println("Please provide [-dev authorlist] or [-test authorlist testset.txt]");
 		}
