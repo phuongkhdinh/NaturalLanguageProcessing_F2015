@@ -84,7 +84,7 @@ public class Classifier {
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
                 pageText.append(inputLine);
-                pageText.append("\n");
+                pageText.append("\n"); //NOt sure why you put new lines. are we still considering dot as a character?
             }
             in.close();
         }
@@ -96,7 +96,26 @@ public class Classifier {
     }
 
 	public String[] extractDevSet(String text) {
-        return new String[0];
+		String[] sentences = text.split("\n");
+		//int sentenceCount = sentences.length;
+		StringBuilder trainText = new StringBuilder();
+		StringBuilder testText = new StringBuilder();
+
+		int count = 0;
+		for (String sentence:sentences){
+			if (count%10 == 0) {
+				//Move in the test set
+				testText.append(sentence);
+				testText.append("\n");
+			} else {
+				// Move in the train set
+				trainText.append(sentence);
+				trainText.append("\n");
+			}
+			count = count + 1;
+		}
+		String[] sets = new String[] {trainText.toString(), testText.toString()};
+        return sets;
 	}
 
     /* Tokenizes raw text into an ArrayList of tokens. */
