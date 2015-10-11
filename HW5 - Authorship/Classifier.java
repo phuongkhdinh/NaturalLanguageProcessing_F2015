@@ -397,6 +397,7 @@ public class Classifier {
 		                
 	                	String mostMatchAuthor = c.test(languageModels, line) ;
 	                								//authorsCompleteSets[1] is the hashmap of {author:testset}
+	                	System.out.println(mostMatchAuthor);
 	                }
                 }
 	  			catch (Exception e) {
