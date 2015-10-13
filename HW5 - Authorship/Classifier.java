@@ -348,65 +348,59 @@ public class Classifier {
         return languageModels;
 	}
 
-	public String displayResults(HashMap<String, Integer[]> resultsMap) {
-		StringBuilder resultsString = new StringBuilder();
-		resultsString.append("Results on dev set:\n");
+	public void displayResults(HashMap<String, Integer[]> resultsMap) {
+
+		System.out.println("Results on dev set: ");
 		for (String author : resultsMap.keySet()) {
-			resultsString.append(author + "\t");
+			//resultsString.append(author + "\t");
 			Integer[] numCorrectAndTotal = resultsMap.get(author);
-			resultsString.append(numCorrectAndTotal[0] + "/" + numCorrectAndTotal[1] + " correct\n");
+			//resultsString.append(numCorrectAndTotal[0] + "/" + numCorrectAndTotal[1] + " correct\n");
+			System.out.printf("%-30.30s  %-30.30s%n", author, numCorrectAndTotal[0] + "/" + numCorrectAndTotal[1] + " correct");
 		}
-		return resultsString.toString();
 	}
 
 	public static void main(String[] args) {
 		Classifier c = new Classifier();
-        if (args.length > 0 && (args[0].equals("-dev") || args[0].equals("-test"))) {
-            if (args[0].equals("-dev") && args.length == 2) {
-            	System.out.println("Training... (this may take a while)");
-            	// Create DevSet, testSet for each author
-            	HashMap<String, String>[] authorsCompleteSets = c.getAuthorsCompleteSets(args[1]); // List of 2 dictionary, 1st element DevText, 
-            														      //2nd element TestSet for each author
+        if (args[0].equals("-dev") && args.length == 2) {
+        	System.out.println("Training... (this may take a while)");
+        	// Create DevSet, testSet for each author
+        	HashMap<String, String>[] authorsCompleteSets = c.getAuthorsCompleteSets(args[1]); // List of 2 dictionary, 1st element DevText, 
+        														      //2nd element TestSet for each author
 
-            	// create lang models
-            	ArrayList<LanguageModel> languageModels = c.buildLanguageModels(authorsCompleteSets[0]); 
-            	         						//authorsCompleteSets[0] is the hashmap of {author:devset}
+        	// create lang models
+        	ArrayList<LanguageModel> languageModels = c.buildLanguageModels(authorsCompleteSets[0]); 
+        	         						//authorsCompleteSets[0] is the hashmap of {author:devset}
 
-                // test on test set, print result
-                HashMap<String, Integer[]> devTestResults = c.devTest(languageModels, authorsCompleteSets[1]) ;
+            // test on test set, print result
+            HashMap<String, Integer[]> devTestResults = c.devTest(languageModels, authorsCompleteSets[1]) ;
+            								//authorsCompleteSets[1] is the hashmap of {author:testset}
+            c.displayResults(devTestResults);
+        
+        } else if (args[0].equals("-test") && args.length == 3) {
+        	System.out.println("Training... (this may take a while)");
+        	// Create DevSet, testSet for each author
+        	HashMap<String, String>[] authorsCompleteSets = c.getAuthorsCompleteSets(args[1]); // List of 2 dictionary, 1st element DevText, 
+        														      //2nd element TestSet for each author
+
+        	// create lang models
+        	ArrayList<LanguageModel> languageModels = c.buildLanguageModels(authorsCompleteSets[0]); 
+        	         						//authorsCompleteSets[0] is the hashmap of {author:devset}
+
+           try{
+	            BufferedReader reader = new BufferedReader(new FileReader(args[2]));
+		    	String line;
+		    	while ((line = reader.readLine()) != null) {
+	                
+                	String mostMatchAuthor = c.test(languageModels, line) ;
                 								//authorsCompleteSets[1] is the hashmap of {author:testset}
-                System.out.println(c.displayResults(devTestResults));
-
-            }
-
-            else if (args[0].equals("-test") && args.length == 3) {
-            	System.out.println("Training... (this may take a while)");
-            	// Create DevSet, testSet for each author
-            	HashMap<String, String>[] authorsCompleteSets = c.getAuthorsCompleteSets(args[1]); // List of 2 dictionary, 1st element DevText, 
-            														      //2nd element TestSet for each author
-
-            	// create lang models
-            	ArrayList<LanguageModel> languageModels = c.buildLanguageModels(authorsCompleteSets[0]); 
-            	         						//authorsCompleteSets[0] is the hashmap of {author:devset}
-
-                // test on test set, print result
-	           try{
-		            BufferedReader reader = new BufferedReader(new FileReader(args[2]));
-			    	String line;
-			    	while ((line = reader.readLine()) != null) {
-		                
-	                	String mostMatchAuthor = c.test(languageModels, line) ;
-	                								//authorsCompleteSets[1] is the hashmap of {author:testset}
-	                	System.out.println(mostMatchAuthor);
-	                }
+                	System.out.println(mostMatchAuthor);
                 }
-	  			catch (Exception e) {
-			    	System.err.println(e);
-			    	System.err.println("Could not open file to test");
-			  	}
             }
-        }
-		else {
+  			catch (Exception e) {
+		    	System.err.println(e);
+		    	System.err.println("Could not open file to test");
+		  	}
+        } else {
 			System.out.println("Please provide [-dev authorlist] or [-test authorlist testset.txt]");
 		}
 
