@@ -26,7 +26,11 @@ def get_spectro(filename):
 
 	#Draw it
 	spectroArray = spectroArray.T
+	fig = plt.figure() 
 	plt.imshow(spectroArray, origin = "lower", cmap = cm.Greys, extent=[0,n/100,0,16000], aspect='auto') 
+	plt.xlabel("Time/s")
+	plt.ylabel("Frequency/Hz")
+	fig.suptitle('Spectrogram for ' + filename, fontsize=15)
 	# longitude_top_left,longitude_top_right,latitude_bottom_left,latitude_top_left
 	# erm, don't know which axis is which! timee need to be divided by 100
 	# don't know how to scale k back to frequency (by times 400)
