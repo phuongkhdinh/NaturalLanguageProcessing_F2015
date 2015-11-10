@@ -1,4 +1,6 @@
 S -> X
 X -> NP VP
-NP -> john
+NP -> DT NN
+DT -> the
+NN -> person
 VP -> walked

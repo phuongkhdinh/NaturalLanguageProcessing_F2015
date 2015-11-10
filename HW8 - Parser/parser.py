@@ -1,6 +1,7 @@
 import sys
 
 # TODO If word isn't in grammar, catch so dictionary access doesn't cause error
+# TODO account for pipe/or in rules, ex NN -> john | julia
 
 class Node():
 	def __init__(self, terminal, tree):
@@ -36,23 +37,27 @@ def createTree(node, recursionDepth):
 
 def fillTable(table, tokens, grammar):
 	N = len(tokens)
-	#print(grammar)
+	print(grammar)
 	for i in range(N):
 		table[i][i+1] = []
 		productions = grammar[(tokens[i], )]
 		for production in productions:
+			print(production, tokens[i])
 			table[i][i+1].append(Node(production, tokens[i])) #List of all possible terminals matching with token 
 	for i in range(1, N+1):
-		for j in range(N+1-i): #This is to go diagonally
+		for j in range(N+2-i): #This is to go diagonally
+			print(j,i)
 			for k in range(j+1, i):
 				BList = table[j][k] # Get back a list of Nodes
 				CList = table[k][i]
+				print(BList, CList)
 				for B in BList:
 					for C in CList: # Note: B and C are node object containing the terminal and its pointer
 						if (B.terminal, C.terminal) in grammar:
 							productions = grammar[(B.terminal, C.terminal)]
 							for production in productions:
 								table[j][i].append(Node(production, [B, C]))
+
 
 	return table 
 
