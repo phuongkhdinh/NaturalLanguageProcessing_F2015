@@ -1,5 +1,7 @@
 import sys
 
+# TODO If word isn't in grammar, catch so dictionary access doesn't cause error
+
 class Node():
 	def __init__(self, terminal, tree):
 		self.terminal = terminal
@@ -16,9 +18,9 @@ def main():
 	table = fillTable(table, tokens, grammar)
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
+			print("S")
 
-
-def printTree()
+#def printTree()
 def fillTable(table, tokens, grammar):
 	N = len(tokens)
 	print(grammar)
@@ -65,31 +67,27 @@ def get_grammar(grammar_filename):
 			lhs_rhs_dict[left_hand_side].append(tuple(right_hand_side))
 
 	# If a rule is a unit production, duplicate rules to conform to CNF
-	lhs_removal_list = []
-	lhs_deletion_list = []
 	grammar_removal_list = []
 	grammar_deletion_list = []
 	for lhs in lhs_rhs_dict:
 		for rhs in lhs_rhs_dict[lhs]:
-			if len(rhs) == 1 and rhs[0] != rhs[0].lower(): # Unit production
+			if len(rhs) == 1 and rhs[0] != rhs[0].lower(): 
+				# Unit production
 				print("unit production rule:", lhs, "->", rhs)
+
+				# First, for X -> Y, copy all rules X -> AB to Y -> AB
 				for possible_repeated_lhs in lhs_rhs_dict:
 					if possible_repeated_lhs == rhs:
 						for repeated_rule in lhs_rhs_dict[possible_repeated_lhs]:
 							lhs_rhs_dict[lhs].append(repeated_rule)
 							grammar_dict[repeated_rule].append(lhs)
+
+				# Prepare to remove the unit production rules after the loops
 				grammar_removal_list.append((rhs, lhs))
-				#grammar_dict[rhs].remove(lhs)
 				if len(grammar_dict[rhs]) == 1: # Will be 0 after removal
+					print("Will delete rhs", rhs)
 					grammar_deletion_list.append(rhs)
-				lhs_removal_list.append((lhs, rhs))
-				#lhs_rhs_dict[lhs].remove(rhs)
-				if len(lhs_rhs_dict[lhs]) == 1: # Will be 0 after removal
-					lhs_deletion_list.append(lhs)
-	for item in lhs_removal_list:
-		lhs_rhs_dict[item[0]].remove(item[1])
-	for item in lhs_deletion_list:
-		lhs_rhs_dict.pop(item)
+
 	for item in grammar_removal_list:
 		grammar_dict[item[0]].remove(item[1])
 	for item in grammar_deletion_list:
