@@ -1,5 +1,44 @@
 import sys
+class Node():
+	self.terminal = None
+	self.pointer = None
+	def __init__(self, terminal, tree):
+		self.terminal = terminal
+		self.pointer = tree
 
+
+
+def main(sentence, grammarRaw):
+	
+	grammar = getGrammar(grammarRaw)
+	tokens = sentence.split()
+	N = len(tokens) #N is number of words in sentence
+	# fill with 0
+	table = [[0 for i in range(N + 1)] for j in range(N+1)]
+	table = fillTable(table, tokens, grammar)
+	print(table[0,N])
+
+
+def fillTable(table, tokens, grammar):
+	N = len(tokens)
+	for i in range(N):
+		table[i][i+1] = []
+		productions = grammar[(tokens[i])]
+		for production in productions:
+			table[i][i+1].append(Node(production, None)) #List of all possible terminals matching with token 
+	for i in range(1, N+1):
+		for j in range(N+1-i): #This is to go diagonally
+			for k in range(j+1, i):
+				BList = table[j][k] # Get back a list of Nodes
+				CList = table[k][i]
+				for B in BList:
+					for C in CList: # Note: B and C are node object containing the terminal and its pointer
+						if (B.terminal, C.terminal) in grammar:
+							productions = grammar[(B, C)]
+							for production in productions:
+								table[j][i].append(Node(production, [B, C]))
+
+	return table 
 def get_grammar(grammar_filename):
 	"""Takes in a filename and returns a dictionary of rules in the format
 	   tuple of right hand side: string of left hand side"""
