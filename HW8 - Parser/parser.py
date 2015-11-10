@@ -13,12 +13,15 @@ def main():
 	grammar = get_grammar(grammarRaw)
 	tokens = sentence.split()
 	N = len(tokens) #N is number of words in sentence
-	# fill with 0
+	# fill with empty lists
 	table = [[[] for i in range(N + 1)] for j in range(N+1)]
 	table = fillTable(table, tokens, grammar)
+	print(len(table[0][N]))
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
 			createTree(finalParse, 0)
+		else:
+			print("Not sentence:", finalParse.terminal)
 
 
 def createTree(node, recursionDepth):
@@ -29,13 +32,11 @@ def createTree(node, recursionDepth):
 	else:
 		sys.stdout.write(node.pointer)
 	sys.stdout.write(")")
-	sys.stdout.write("\n"+''.join([' ' for s in xrange(recursionDepth)]))
+	sys.stdout.write("\n"+''.join([' ' for s in range(recursionDepth)]))
 
-
-#def printTree()
 def fillTable(table, tokens, grammar):
 	N = len(tokens)
-	print(grammar)
+	#print(grammar)
 	for i in range(N):
 		table[i][i+1] = []
 		productions = grammar[(tokens[i], )]
@@ -61,6 +62,7 @@ def get_grammar(grammar_filename):
 	grammar_file = open(grammar_filename, 'r')
 	grammar_dict = {}
 	lhs_rhs_dict = {}
+
 	for rule in grammar_file:
 
 		# Get left-hand side and right-hand side of the rule
@@ -85,11 +87,10 @@ def get_grammar(grammar_filename):
 		for rhs in lhs_rhs_dict[lhs]:
 			if len(rhs) == 1 and rhs[0] != rhs[0].lower(): 
 				# Unit production
-				print("unit production rule:", lhs, "->", rhs)
 
 				# First, for X -> Y, copy all rules X -> AB to Y -> AB
 				for possible_repeated_lhs in lhs_rhs_dict:
-					if possible_repeated_lhs == rhs:
+					if possible_repeated_lhs == rhs[0]:
 						for repeated_rule in lhs_rhs_dict[possible_repeated_lhs]:
 							lhs_rhs_dict[lhs].append(repeated_rule)
 							grammar_dict[repeated_rule].append(lhs)
@@ -97,23 +98,13 @@ def get_grammar(grammar_filename):
 				# Prepare to remove the unit production rules after the loops
 				grammar_removal_list.append((rhs, lhs))
 				if len(grammar_dict[rhs]) == 1: # Will be 0 after removal
-					print("Will delete rhs", rhs)
 					grammar_deletion_list.append(rhs)
 
 	for item in grammar_removal_list:
 		grammar_dict[item[0]].remove(item[1])
 	for item in grammar_deletion_list:
 		grammar_dict.pop(item)
-
-
-	#print("LHS dict:\n", lhs_rhs_dict)
-	#print("Grammar dict:\n", grammar_dict)
 	return grammar_dict
-
-# def main():
-# 	grammar_filename = sys.argv[1]
-# 	grammar_dict = get_grammar(grammar_filename)
-# 	#print(grammar_dict)
 
 if __name__ == "__main__":
 	main()
