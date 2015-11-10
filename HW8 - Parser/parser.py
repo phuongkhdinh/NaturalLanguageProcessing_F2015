@@ -18,7 +18,19 @@ def main():
 	table = fillTable(table, tokens, grammar)
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
-			print("S")
+			createTree(finalParse, 0)
+
+
+def createTree(node, recursionDepth):
+	sys.stdout.write("("+ node.terminal +" ")
+	if type(node.pointer) is not str:
+		createTree(node.pointer[0],recursionDepth+len(node.terminal)+2)
+		createTree(node.pointer[1],recursionDepth+len(node.terminal)+2)
+	else:
+		sys.stdout.write(node.pointer)
+	sys.stdout.write(")")
+	sys.stdout.write("\n"+''.join([' ' for s in xrange(recursionDepth)]))
+
 
 #def printTree()
 def fillTable(table, tokens, grammar):
@@ -28,7 +40,7 @@ def fillTable(table, tokens, grammar):
 		table[i][i+1] = []
 		productions = grammar[(tokens[i], )]
 		for production in productions:
-			table[i][i+1].append(Node(production, None)) #List of all possible terminals matching with token 
+			table[i][i+1].append(Node(production, tokens[i])) #List of all possible terminals matching with token 
 	for i in range(1, N+1):
 		for j in range(N+1-i): #This is to go diagonally
 			for k in range(j+1, i):
