@@ -39,9 +39,13 @@ def fillTable(table, tokens, grammar):
 	#print(grammar)
 	for i in range(N):
 		table[i][i+1] = []
-		productions = grammar[(tokens[i], )]
-		for production in productions:
-			table[i][i+1].append(Node(production, tokens[i])) #List of all possible terminals matching with token 
+		if (tokens[i], ) in grammar:
+			productions = grammar[(tokens[i], )]
+			for production in productions:
+				table[i][i+1].append(Node(production, tokens[i])) #List of all possible terminals matching with token
+		else:
+			 sys.stdout.write("ERROR: The word "+tokens[i]+" is not in the given grammar.\n")
+			 sys.exit(0)
 	for i in range(1, N+1):
 		for j in range(N+1-i): #This is to go diagonally
 			for k in range(j+1, i):
