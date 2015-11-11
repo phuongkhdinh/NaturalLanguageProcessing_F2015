@@ -83,7 +83,8 @@ def fillTable(table, tokens, grammar):
 			 sys.stdout.write("ERROR: The word "+tokens[i]+" is not in the given grammar.\n")
 			 sys.exit(0)
 	for i in range(1, N+1):
-		for j in range(N+1-i,-1,-1): #This is to go diagonally
+		for j in range(i-2,-1,-1): #This is to go diagonally
+			print(j,i)
 			for k in range(j+1, i):
 				BList = table[j][k] # Get back a list of Nodes
 				CList = table[k][i]
@@ -116,10 +117,13 @@ def main():
 	table = [[[] for i in range(N + 1)] for j in range(N+1)]
 	table = fillTable(table, tokens, grammar)
 	validSentence = False
+	print("num final parses:", len(table[0][N]))
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
 			printTree(finalParse, 0)
 			validSentence = True
+		else:
+			print("Another parse is", finalParse.terminal)
 	if not validSentence:
 		sys.stdout.write("ERROR: There is no grammatical parsing for the given sentence.\n")
 

@@ -7,7 +7,6 @@ NBAR -> N REL
 REL -> WH VP 
 VP -> IV 
 VP -> TV NP 
-VP -> DV NP PP 
 VP -> SV S 
 PP -> P NP 
 PN -> vincent 
