@@ -1,0 +1,36 @@
+S -> NP VP 
+NP -> PN 
+NP -> PN REL 
+NP -> DET NBAR 
+NBAR -> N 
+NBAR -> N REL 
+REL -> WH VP 
+VP -> IV 
+VP -> TV NP 
+VP -> DV NP PP 
+VP -> SV S 
+PP -> P NP 
+PN -> vincent 
+PN -> mia 
+PN -> marsellus 
+PN -> jules 
+DET -> a 
+DET -> the 
+DET -> her 
+DET -> his 
+N -> gun 
+N -> robber 
+N -> man 
+N -> woman 
+WH -> who 
+WH -> that 
+P -> to 
+IV -> died 
+IV -> fell 
+TV -> loved 
+TV -> shot 
+TV -> knew 
+DV -> gave 
+DV -> handed 
+SV -> knew 
+SV -> believed
