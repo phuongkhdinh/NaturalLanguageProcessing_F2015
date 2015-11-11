@@ -1,8 +1,7 @@
 import sys
 
-# TODO If word isn't in grammar, catch so dictionary access doesn't cause error
 # TODO account for pipe/or in rules, ex NN -> john | julia
-# TODO make sure that if there are multiple parses, the program prints all of them
+# TODO make sure that if there are multiple parses, the program prints all of them -> should already work
 
 class Node():
 	def __init__(self, terminal, tree):
@@ -18,16 +17,20 @@ def main():
 	# fill with empty lists
 	table = [[[] for i in range(N + 1)] for j in range(N+1)]
 	table = fillTable(table, tokens, grammar)
+	validSentence = False
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
-			createTree(finalParse, 0)
+			printTree(finalParse, 0)
+			validSentence = True
+	if not validSentence:
+		sys.stdout.write("There is no grammar parsing for given sentence.\n")
 
 
-def createTree(node, recursionDepth):
+def printTree(node, recursionDepth):
 	sys.stdout.write("("+ node.terminal +" ")
 	if type(node.pointer) is not str:
-		createTree(node.pointer[0],recursionDepth+len(node.terminal)+2)
-		createTree(node.pointer[1],recursionDepth+len(node.terminal)+2)
+		printTree(node.pointer[0],recursionDepth+len(node.terminal)+2)
+		printTree(node.pointer[1],recursionDepth+len(node.terminal)+2)
 	else:
 		sys.stdout.write(node.pointer)
 	sys.stdout.write(")")
