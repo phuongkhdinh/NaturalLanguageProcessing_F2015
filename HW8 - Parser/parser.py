@@ -103,11 +103,13 @@ def printTree(node, recursionDepth):
 	sys.stdout.write("("+ node.terminal +" ")
 	if type(node.pointer) is not str:
 		printTree(node.pointer[0],recursionDepth+len(node.terminal)+2)
+		sys.stdout.write("\n"+''.join([' ' for s in range(recursionDepth+len(node.terminal)+2)]))
 		printTree(node.pointer[1],recursionDepth+len(node.terminal)+2)
 	else:
 		sys.stdout.write(node.pointer)
+	#sys.stdout.write(''.join([' ' for s in range(recursionDepth)]))
 	sys.stdout.write(")")
-	sys.stdout.write("\n"+''.join([' ' for s in range(recursionDepth)]))
+	
 
 def main():
 	grammarRaw = sys.argv[1] # Filename
@@ -122,6 +124,7 @@ def main():
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
 			printTree(finalParse, 0)
+			sys.stdout.write("\n")
 			validSentence = True
 	if not validSentence:
 		sys.stdout.write("ERROR: There is no grammatical parsing for the given sentence.\n")

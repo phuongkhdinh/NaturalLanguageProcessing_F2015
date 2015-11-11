@@ -1,0 +1,11 @@
+S -> X
+X -> NP VP
+VP -> V NP
+PP -> P NP
+VP -> VP PP
+NP -> NP PP
+V -> saw
+NP -> phuong
+NP -> julia
+P -> with
+NP -> binoculars 
