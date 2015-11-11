@@ -1,6 +1,8 @@
 import sys
 
 # TODO If word isn't in grammar, catch so dictionary access doesn't cause error
+# TODO account for pipe/or in rules, ex NN -> john | julia
+# TODO make sure that if there are multiple parses, the program prints all of them
 
 class Node():
 	def __init__(self, terminal, tree):
@@ -16,12 +18,9 @@ def main():
 	# fill with empty lists
 	table = [[[] for i in range(N + 1)] for j in range(N+1)]
 	table = fillTable(table, tokens, grammar)
-	print(len(table[0][N]))
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
 			createTree(finalParse, 0)
-		else:
-			print("Not sentence:", finalParse.terminal)
 
 
 def createTree(node, recursionDepth):
@@ -36,7 +35,6 @@ def createTree(node, recursionDepth):
 
 def fillTable(table, tokens, grammar):
 	N = len(tokens)
-	#print(grammar)
 	for i in range(N):
 		table[i][i+1] = []
 		if (tokens[i], ) in grammar:
@@ -47,7 +45,7 @@ def fillTable(table, tokens, grammar):
 			 sys.stdout.write("ERROR: The word "+tokens[i]+" is not in the given grammar.\n")
 			 sys.exit(0)
 	for i in range(1, N+1):
-		for j in range(N+1-i): #This is to go diagonally
+		for j in range(N+1-i,-1,-1): #This is to go diagonally
 			for k in range(j+1, i):
 				BList = table[j][k] # Get back a list of Nodes
 				CList = table[k][i]
@@ -57,6 +55,7 @@ def fillTable(table, tokens, grammar):
 							productions = grammar[(B.terminal, C.terminal)]
 							for production in productions:
 								table[j][i].append(Node(production, [B, C]))
+
 
 	return table 
 
