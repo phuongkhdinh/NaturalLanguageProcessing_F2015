@@ -2,5 +2,4 @@ S -> VB NP
 VB -> book
 NP -> DT NN
 DT -> the
-NN -> dinner
-NN -> flight
+NN -> dinner | flight

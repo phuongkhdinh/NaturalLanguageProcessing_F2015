@@ -74,17 +74,20 @@ def get_grammar(grammar_filename):
 		# Get left-hand side and right-hand side of the rule
 		divide_rule = rule.strip("\n").split("->")
 		left_hand_side = divide_rule[0].strip()
-		right_hand_side = divide_rule[1].strip().split(" ")
+		right_hand_side = divide_rule[1].strip()
+		rhs_elements = right_hand_side.split("|")
 
-		# Add rule to dictionary
-		if tuple(right_hand_side) not in grammar_dict:
-			grammar_dict[tuple(right_hand_side)] = [left_hand_side]
-		else:
-			grammar_dict[tuple(right_hand_side)].append(left_hand_side)
-		if left_hand_side not in lhs_rhs_dict:
-			lhs_rhs_dict[left_hand_side] = [tuple(right_hand_side)]
-		else:
-			lhs_rhs_dict[left_hand_side].append(tuple(right_hand_side))
+		for rhs_element in rhs_elements:
+			rhs_element = rhs_element.strip().split(" ")
+			# Add rule to dictionary
+			if tuple(rhs_element) not in grammar_dict:
+				grammar_dict[tuple(rhs_element)] = [left_hand_side]
+			else:
+				grammar_dict[tuple(rhs_element)].append(left_hand_side)
+			if left_hand_side not in lhs_rhs_dict:
+				lhs_rhs_dict[left_hand_side] = [tuple(rhs_element)]
+			else:
+				lhs_rhs_dict[left_hand_side].append(tuple(rhs_element))
 
 	# If a rule is a unit production, duplicate rules to conform to CNF
 	grammar_removal_list = []
