@@ -17,7 +17,11 @@ class Node():
 def get_grammar(grammar_filename):
 	"""Takes in a filename and returns a dictionary of rules in the format
 	   tuple of right hand side: string of left hand side"""
-	grammar_file = open(grammar_filename, 'r')
+	try:
+		grammar_file = open(grammar_filename, 'r')
+	except:
+		sys.stderr.write("ERROR: Cannot open grammar file " + grammar_filename + ".\n")
+		sys.exit()
 	grammar_dict = {}
 	lhs_rhs_dict = {}
 
@@ -35,6 +39,9 @@ def get_grammar(grammar_filename):
 			for rhs_element in rhs_elements:
 				# Add rule to dictionary
 				rhs_element = rhs_element.strip().split(" ")
+				if len(rhs_element) != 1 and len(rhs_element) != 2:
+					sys.stderr.write("ERROR: All rules must be in the form A -> B C, A -> B, A -> d\n")
+					sys.exit()
 				if tuple(rhs_element) not in grammar_dict:
 					grammar_dict[tuple(rhs_element)] = [left_hand_side]
 				else:
@@ -112,22 +119,25 @@ def printTree(node, recursionDepth):
 	
 
 def main():
-	grammarRaw = sys.argv[1] # Filename
-	sentence = sys.argv[2]
-	grammar = get_grammar(grammarRaw)
-	tokens = sentence.split()
-	N = len(tokens) #N is number of words in sentence
-	# fill with empty lists
-	table = [[[] for i in range(N + 1)] for j in range(N+1)]
-	table = fillTable(table, tokens, grammar)
-	validSentence = False
-	for finalParse in table[0][N]:
-		if finalParse.terminal == "S":
-			printTree(finalParse, 0)
-			sys.stdout.write("\n")
-			validSentence = True
-	if not validSentence:
-		sys.stdout.write("ERROR: There is no grammatical parsing for the given sentence.\n")
+	if len(sys.argv) == 3:
+		grammarRaw = sys.argv[1] # Filename
+		sentence = sys.argv[2].lower()
+		grammar = get_grammar(grammarRaw)
+		tokens = sentence.split()
+		N = len(tokens) #N is number of words in sentence
+		# fill with empty lists
+		table = [[[] for i in range(N + 1)] for j in range(N+1)]
+		table = fillTable(table, tokens, grammar)
+		validSentence = False
+		for finalParse in table[0][N]:
+			if finalParse.terminal == "S":
+				printTree(finalParse, 0)
+				sys.stdout.write("\n")
+				validSentence = True
+		if not validSentence:
+			sys.stdout.write("ERROR: There is no grammatical parsing for the given sentence.\n")
+	else:
+		sys.stdout.write("ERROR: Must provide exactly two arguments: grammarFile, sentence.\n")
 
 if __name__ == "__main__":
 	main()
