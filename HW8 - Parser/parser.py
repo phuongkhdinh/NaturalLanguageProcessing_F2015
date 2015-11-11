@@ -1,66 +1,18 @@
+"""
+parser.py
+By Phuong Dinh and Julia Kroll
+Implements the CKY algorithm
+Takes in a grammar file and a sentence, 
+and prints all grammatical parses of the sentence.
+"""
+
 import sys
 
-# TODO account for pipe/or in rules, ex NN -> john | julia
-# TODO make sure that if there are multiple parses, the program prints all of them -> should already work
-
 class Node():
+	"""Helper class to track backpointers to reconstruct parse trees"""
 	def __init__(self, terminal, tree):
 		self.terminal = terminal
 		self.pointer = tree
-
-def main():
-	grammarRaw = sys.argv[1] # Filename
-	sentence = sys.argv[2]
-	grammar = get_grammar(grammarRaw)
-	tokens = sentence.split()
-	N = len(tokens) #N is number of words in sentence
-	# fill with empty lists
-	table = [[[] for i in range(N + 1)] for j in range(N+1)]
-	table = fillTable(table, tokens, grammar)
-	validSentence = False
-	for finalParse in table[0][N]:
-		if finalParse.terminal == "S":
-			printTree(finalParse, 0)
-			validSentence = True
-	if not validSentence:
-		sys.stdout.write("There is no grammar parsing for given sentence.\n")
-
-
-def printTree(node, recursionDepth):
-	sys.stdout.write("("+ node.terminal +" ")
-	if type(node.pointer) is not str:
-		printTree(node.pointer[0],recursionDepth+len(node.terminal)+2)
-		printTree(node.pointer[1],recursionDepth+len(node.terminal)+2)
-	else:
-		sys.stdout.write(node.pointer)
-	sys.stdout.write(")")
-	sys.stdout.write("\n"+''.join([' ' for s in range(recursionDepth)]))
-
-def fillTable(table, tokens, grammar):
-	N = len(tokens)
-	for i in range(N):
-		table[i][i+1] = []
-		if (tokens[i], ) in grammar:
-			productions = grammar[(tokens[i], )]
-			for production in productions:
-				table[i][i+1].append(Node(production, tokens[i])) #List of all possible terminals matching with token
-		else:
-			 sys.stdout.write("ERROR: The word "+tokens[i]+" is not in the given grammar.\n")
-			 sys.exit(0)
-	for i in range(1, N+1):
-		for j in range(N+1-i,-1,-1): #This is to go diagonally
-			for k in range(j+1, i):
-				BList = table[j][k] # Get back a list of Nodes
-				CList = table[k][i]
-				for B in BList:
-					for C in CList: # Note: B and C are node object containing the terminal and its pointer
-						if (B.terminal, C.terminal) in grammar:
-							productions = grammar[(B.terminal, C.terminal)]
-							for production in productions:
-								table[j][i].append(Node(production, [B, C]))
-
-
-	return table 
 
 def get_grammar(grammar_filename):
 	"""Takes in a filename and returns a dictionary of rules in the format
@@ -72,14 +24,14 @@ def get_grammar(grammar_filename):
 	for rule in grammar_file:
 
 		# Get left-hand side and right-hand side of the rule
-		divide_rule = rule.strip("\n").split("->")
+		divide_rule = rule.strip("\n").split("->") # NP -> DT NN
 		left_hand_side = divide_rule[0].strip()
 		right_hand_side = divide_rule[1].strip()
-		rhs_elements = right_hand_side.split("|")
+		rhs_elements = right_hand_side.split("|") # john | cat | bunny
 
 		for rhs_element in rhs_elements:
-			rhs_element = rhs_element.strip().split(" ")
 			# Add rule to dictionary
+			rhs_element = rhs_element.strip().split(" ")
 			if tuple(rhs_element) not in grammar_dict:
 				grammar_dict[tuple(rhs_element)] = [left_hand_side]
 			else:
@@ -109,11 +61,67 @@ def get_grammar(grammar_filename):
 				if len(grammar_dict[rhs]) == 1: # Will be 0 after removal
 					grammar_deletion_list.append(rhs)
 
+	# Remove unneeded items left over from getting rid of unit productions
 	for item in grammar_removal_list:
 		grammar_dict[item[0]].remove(item[1])
 	for item in grammar_deletion_list:
 		grammar_dict.pop(item)
+
+	# Return final dictionary of rules
 	return grammar_dict
+
+def fillTable(table, tokens, grammar):
+	"""CKY algorithm"""
+	N = len(tokens)
+	for i in range(N):
+		table[i][i+1] = []
+		if (tokens[i], ) in grammar:
+			productions = grammar[(tokens[i], )]
+			for production in productions:
+				table[i][i+1].append(Node(production, tokens[i])) #List of all possible terminals matching with token
+		else:
+			 sys.stdout.write("ERROR: The word "+tokens[i]+" is not in the given grammar.\n")
+			 sys.exit(0)
+	for i in range(1, N+1):
+		for j in range(N+1-i,-1,-1): #This is to go diagonally
+			for k in range(j+1, i):
+				BList = table[j][k] # Get back a list of Nodes
+				CList = table[k][i]
+				for B in BList:
+					for C in CList: # Note: B and C are node object containing the terminal and its pointer
+						if (B.terminal, C.terminal) in grammar:
+							productions = grammar[(B.terminal, C.terminal)]
+							for production in productions:
+								table[j][i].append(Node(production, [B, C]))
+	return table 
+
+def printTree(node, recursionDepth):
+	"""Prints the tree structure of a parsed sentence"""
+	sys.stdout.write("("+ node.terminal +" ")
+	if type(node.pointer) is not str:
+		printTree(node.pointer[0],recursionDepth+len(node.terminal)+2)
+		printTree(node.pointer[1],recursionDepth+len(node.terminal)+2)
+	else:
+		sys.stdout.write(node.pointer)
+	sys.stdout.write(")")
+	sys.stdout.write("\n"+''.join([' ' for s in range(recursionDepth)]))
+
+def main():
+	grammarRaw = sys.argv[1] # Filename
+	sentence = sys.argv[2]
+	grammar = get_grammar(grammarRaw)
+	tokens = sentence.split()
+	N = len(tokens) #N is number of words in sentence
+	# fill with empty lists
+	table = [[[] for i in range(N + 1)] for j in range(N+1)]
+	table = fillTable(table, tokens, grammar)
+	validSentence = False
+	for finalParse in table[0][N]:
+		if finalParse.terminal == "S":
+			printTree(finalParse, 0)
+			validSentence = True
+	if not validSentence:
+		sys.stdout.write("ERROR: There is no grammatical parsing for the given sentence.\n")
 
 if __name__ == "__main__":
 	main()
