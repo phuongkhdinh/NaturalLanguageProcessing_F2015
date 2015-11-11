@@ -23,23 +23,26 @@ def get_grammar(grammar_filename):
 
 	for rule in grammar_file:
 
-		# Get left-hand side and right-hand side of the rule
-		divide_rule = rule.strip("\n").split("->") # NP -> DT NN
-		left_hand_side = divide_rule[0].strip()
-		right_hand_side = divide_rule[1].strip()
-		rhs_elements = right_hand_side.split("|") # john | cat | bunny
+		# Disregard 'rules' that are really just commented lines
+		if rule[0] != "#":
 
-		for rhs_element in rhs_elements:
-			# Add rule to dictionary
-			rhs_element = rhs_element.strip().split(" ")
-			if tuple(rhs_element) not in grammar_dict:
-				grammar_dict[tuple(rhs_element)] = [left_hand_side]
-			else:
-				grammar_dict[tuple(rhs_element)].append(left_hand_side)
-			if left_hand_side not in lhs_rhs_dict:
-				lhs_rhs_dict[left_hand_side] = [tuple(rhs_element)]
-			else:
-				lhs_rhs_dict[left_hand_side].append(tuple(rhs_element))
+			# Get left-hand side and right-hand side of the rule
+			divide_rule = rule.strip("\n").split("->") # NP -> DT NN
+			left_hand_side = divide_rule[0].strip()
+			right_hand_side = divide_rule[1].strip()
+			rhs_elements = right_hand_side.split("|") # john | cat | bunny
+
+			for rhs_element in rhs_elements:
+				# Add rule to dictionary
+				rhs_element = rhs_element.strip().split(" ")
+				if tuple(rhs_element) not in grammar_dict:
+					grammar_dict[tuple(rhs_element)] = [left_hand_side]
+				else:
+					grammar_dict[tuple(rhs_element)].append(left_hand_side)
+				if left_hand_side not in lhs_rhs_dict:
+					lhs_rhs_dict[left_hand_side] = [tuple(rhs_element)]
+				else:
+					lhs_rhs_dict[left_hand_side].append(tuple(rhs_element))
 
 	# If a rule is a unit production, duplicate rules to conform to CNF
 	grammar_removal_list = []
@@ -84,7 +87,6 @@ def fillTable(table, tokens, grammar):
 			 sys.exit(0)
 	for i in range(1, N+1):
 		for j in range(i-2,-1,-1): #This is to go diagonally
-			print(j,i)
 			for k in range(j+1, i):
 				BList = table[j][k] # Get back a list of Nodes
 				CList = table[k][i]
@@ -117,13 +119,10 @@ def main():
 	table = [[[] for i in range(N + 1)] for j in range(N+1)]
 	table = fillTable(table, tokens, grammar)
 	validSentence = False
-	print("num final parses:", len(table[0][N]))
 	for finalParse in table[0][N]:
 		if finalParse.terminal == "S":
 			printTree(finalParse, 0)
 			validSentence = True
-		else:
-			print("Another parse is", finalParse.terminal)
 	if not validSentence:
 		sys.stdout.write("ERROR: There is no grammatical parsing for the given sentence.\n")
 
