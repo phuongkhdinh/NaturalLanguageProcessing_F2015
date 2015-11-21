@@ -4,6 +4,8 @@ import sys
 class Production():
     def __init__(self, *terms):
         self.terms = terms
+    def gettype(self):
+        return type(self.terms[0])
     def __len__(self):
         return len(self.terms)
     def __getitem__(self, index):
@@ -83,29 +85,30 @@ class Column():
             return True
         return False
     def print_(self, completedOnly = False):
-        print "[%s] %r" % (self.index, self.token)
-        print "=" * 35
+        print("[%s] %r" % (self.index, self.token))
+        print("=" * 35)
         for s in self.states:
             if completedOnly and not s.completed():
                 continue
-            print repr(s)
-        print
+            print(repr(s))
+        print()
 
 class Node():
     def __init__(self, value, children):
         self.value = value
         self.children = children
     def print_(self, level = 0):
-        print "  " * level + str(self.value)
+        print("  " * level + str(self.value))
         for child in self.children:
             child.print_(level + 1)
 
 def predict(col, rule):
-    print "I'm in"
+    print("I'm in")
     for prod in rule.productions:
         col.add(State(rule.name, prod, 0, col))
-        print rule.name, "to", prod, col
-    print "-----"
+        if prod.gettype() is str:
+            print(rule.name, "to", prod, col, prod.gettype())
+    print("-----")
 
 def scan(col, state, token):
     if token != col.token:
@@ -146,7 +149,7 @@ def parse(rule, text):
         if st.name == GAMMA_RULE and st.completed():
             return st
     else:
-        print "No tree was built. Not legal sentence"
+        print("No tree was built. Not legal sentence")
         sys.exit(1)
 
 def build_trees(state):
@@ -200,6 +203,9 @@ def build_trees_helper(children, state, rule_index, end_column):
 #     print "--------------------------"
 #     tree.print_()
 
+NP = Rule("NP")
+VP = Rule("VP")
+
 Noun = Rule("Noun", Production("i"),Production("cats"),Production("dogs"),Production("can"))
 Aux = Rule("Aux", Production("can"),Production("may"),Production("will"))
 Verb = Rule("Verb", Production("like"),Production("can"),Production("fool"),Production("catch"))
@@ -207,15 +213,12 @@ Prep = Rule("Prep", Production("in"),Production("like"),Production("with"))
 Det = Rule("Det", Production("the"),Production("an"),Production("a"))
 AND = Rule("AND", Production("and"))
 
-NP = Rule("NP")
 NP.add(Production(Det, Noun), Production(Noun))
-VP = Rule("VP", Production(Verb))
+VP.add(Production(Verb))
 PP = Rule("PP", Production(Prep, NP))
 NP.add(Production(NP, PP), Production(NP, AND, NP))
 VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
 S = Rule("S", Production(NP, VP))
 
-for tree in build_trees(parse(S, "i can like cats and ")):
-    print "--------------------------"
+for tree in build_trees(parse(S, "i can like")):
     tree.print_()
-print "Done"
