@@ -40,7 +40,7 @@ class LanguageModel:
     def parse_sentences(self, filename):
         """Parse each sentence into a tree"""
         f = open(filename, 'r')
-        for sentence in f.readlines()[:2]:
+        for sentence in f.readlines()[:10]:
             trees = self.parser.raw_parse(sentence.lower())
             for tree in trees:
                 #print(tree)
