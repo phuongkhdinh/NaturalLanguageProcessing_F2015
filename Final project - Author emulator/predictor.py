@@ -1,6 +1,7 @@
 from earley_parser import *
 import random
 from nltk import word_tokenize
+import sys
 
 with open("grammar.dat", 'rb') as handle:
     grammar = pickle.loads(handle.read())
@@ -15,7 +16,7 @@ with open("headword_bigram.dat", 'rb') as handle:
 def generate_sentence(phrase):
 	print("Phrase so far:", phrase)
 	n = 3 # Number of words to consider
-	min_length = 5 # Minimum number of words in sentence
+	min_length = random.randint(5,8) # Minimum number of words in sentence
 	all_possible_words, is_complete = parse(grammar["ROOT"], phrase, parser_probs, headword_bigram) # returns sorted dictionary of possible words and their probabilities
 	#print(all_possible_words)
 	#tokenized_sentence = word_tokenize(sentence)
@@ -35,11 +36,16 @@ def generate_sentence(phrase):
 		return generate_sentence(phrase)
 
 def main():
-	starting_phrase = "the boy"
+#try:
+	starting_phrase = " ".join(sys.argv[1:])
 	phrase, is_complete = generate_sentence(starting_phrase)
-	while not is_complete:
+	num_attempts = 0
+	while not is_complete and num_attempts < 6:
+		num_attempts += 1
 		phrase, is_complete = generate_sentence(starting_phrase)
 	print("Finished sentence:", phrase)
+#except:
+	#print("Please enter a starting phrase")
 
 if __name__ == '__main__':
 	main()
