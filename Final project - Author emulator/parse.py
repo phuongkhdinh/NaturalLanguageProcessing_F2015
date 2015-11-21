@@ -10,6 +10,7 @@ import sys
 from earley_parser import *
 from collections import Counter
 from math import log
+import pickle
 
 class LanguageModel:
 
@@ -97,7 +98,7 @@ class LanguageModel:
     def get_bigram(self, tree):
         # For each child
         for i in range(len(tree)):
-            print("tree len", len(tree))
+            #print("tree len", len(tree))
             if len(tree[i]) > 0 and type(tree[i]) != str:
                 self.get_bigram(tree[i])
             # For each terminal
@@ -135,9 +136,9 @@ def main():
     lm = LanguageModel()
     lm.parse_sentences('./hemingway/sentences/sea.txt')
     lm.train_corpus()
-    print("count:", lm.probabilistic_parser_counts[("DT", "the")])
-    print("CC", lm.nonterminal_counts["CC"])
-    print("f", lm.terminal_counts["fish"])
+    # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
+    # print("CC", lm.nonterminal_counts["CC"])
+    # print("f", lm.terminal_counts["fish"])
     #parse_sentences('test.txt')
     #print(rules["NP"].productions)
     # for prod in rules["NP"].productions:
@@ -149,8 +150,18 @@ def main():
 
 
     #pickle
-    for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
-        tree.print_()
+    #pickle the headword bigram
+    with open("headword_bigram.dat", "wb") as outFile:
+        pickle.dump(lm.headword_bigram_probs, outFile)
+    #pickle the probabilistic parser probs (in log)
+    with open("parser_probs.dat", "wb") as outFile:
+        pickle.dump(lm.probabilistic_parser_probs, outFile)
+
+    #pickle the grammar
+    with open("grammar.dat", "wb") as outFile:
+        pickle.dump(lm.grammar, outFile)
+    # for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
+    #     tree.print_()
     
 
 
