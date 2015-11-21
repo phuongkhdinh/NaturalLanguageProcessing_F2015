@@ -32,6 +32,7 @@ class Rule():
     def __repr__(self):
         return "%s -> %s" % (self.name, " | ".join(repr(p) for p in self.productions))
     def add(self, *productions):
+        print(productions)
         self.productions.extend(productions)
 
 class State():
@@ -103,13 +104,12 @@ class Node():
             child.print_(level + 1)
 
 def predict(col, rule):
-    print("I'm in")
+    predictWords = set()
     for prod in rule.productions:
         col.add(State(rule.name, prod, 0, col))
         if prod.gettype() is str:
-            print(rule.name, "to", prod, col, prod.gettype())
-    print("-----")
-
+            predictWords.add(prod.__getitem__(0))
+    return predictWords
 def scan(col, state, token):
     if token != col.token:
         return
@@ -132,19 +132,30 @@ def parse(rule, text):
     table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
 
     for i, col in enumerate(table):
+        predictedWords = set()
         for state in col:
             if state.completed():
                 complete(col, state)
             else:
                 term = state.next_term()
                 if isinstance(term, Rule):
-                    predict(col, term)
+                    predictWord = predict(col, term)
+                    # AMONG THESE WORDS, which one has the highest bigram (top 2)
+                    predictedWords |= predictWord
 
                 elif i + 1 < len(table):
                     scan(table[i+1], state, term)
         
-        #col.print_(completedOnly = True)
-    # find gamma rule in last table column (otherwise fail)
+
+    print(predictedWords)
+
+
+
+
+    # WILL WE END THE SENTENCE HERE?
+
+
+
     for st in table[-1]:
         if st.name == GAMMA_RULE and st.completed():
             return st
@@ -179,30 +190,6 @@ def build_trees_helper(children, state, rule_index, end_column):
 
 
 
-# N = Rule("N", Production("time"), Production("flight"), Production("banana"), 
-#     Production("flies"), Production("boy"), Production("telescope"))
-# D = Rule("D", Production("the"), Production("a"), Production("an"))
-# V = Rule("V", Production("book"), Production("eat"), Production("sleep"), Production("saw"))
-# P = Rule("P", Production("with"), Production("in"), Production("on"), Production("at"),
-#     Production("through"))
-
-# PP = Rule("PP")
-# NP = Rule("NP", Production(D, N), Production("john"), Production("houston"))
-# NP.add(Production(NP, PP))
-# PP.add(Production(P, NP))
-
-# VP = Rule("VP", Production(V, NP))
-# VP.add(Production(VP, PP))
-# S = Rule("S", Production(NP, VP), Production(VP))
-
-# # for tree in build_trees(parse(S, "book the flight through houston")):
-# #     print "--------------------------"
-# #     tree.print_()
-
-# for tree in build_trees(parse(S, "john saw the boy with the telescope")):
-#     print "--------------------------"
-#     tree.print_()
-
 NP = Rule("NP")
 VP = Rule("VP")
 
@@ -220,5 +207,5 @@ NP.add(Production(NP, PP), Production(NP, AND, NP))
 VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
 S = Rule("S", Production(NP, VP))
 
-for tree in build_trees(parse(S, "i can like")):
+for tree in build_trees(parse(S, "i can will")):
     tree.print_()
