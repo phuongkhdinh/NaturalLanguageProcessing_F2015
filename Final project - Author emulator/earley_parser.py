@@ -133,6 +133,7 @@ GAMMA_RULE = u"GAMMA"
 def parse(rule, text, parserProbs, headwordBigram):
     table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
     table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
+    parserProbs[('GAMMA', ('ROOT',))] = 0.0
     ruleTransProbMatrix = {}
     predictWordProbMatrix = {}
 
@@ -145,6 +146,8 @@ def parse(rule, text, parserProbs, headwordBigram):
             else:
                 term = state.next_term()
                 if isinstance(term, Rule):
+                    if state.name == "ROOT" and len(state.production)==1 and state.production[0].name == "FRAG":
+                        continue
                     predictWords = predict(col, term)
                     # AMONG THESE WORDS, which one has the highest bigram (top 2)
                     #print(i)
@@ -168,28 +171,26 @@ def parse(rule, text, parserProbs, headwordBigram):
                             else:
                                 predictWordProbMatrix[word] = wordProb
 
-                    #sys.exit()
-                    #for word in predictWords:
-
-                    #print(predictWord)
 
                 elif i + 1 < len(table):
                     scan(table[i+1], state, term)
         
-    ### Choose one of the top 5
+    ### Rank word by probs
     predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
     #print(predictWordProbMatrix)
-    # WILL WE END THE SENTENCE HERE?
+
 
 
     sentenceComplete = False
     for st in table[-1]:
         if st.name == GAMMA_RULE and st.completed():
+            #return st
             sentenceComplete = True
-        # else:
-        #     print("No tree was built. Not legal sentence")
-        #     sys.exit(1)
-    return predictWordProbMatrix, sentenceComplete
+            return predictWordProbMatrix, sentenceComplete
+    else:
+        print("No tree was built. Not legal sentence")
+        return predictWordProbMatrix, sentenceComplete
+        sys.exit(1)
 
 def build_trees(state):
     return build_trees_helper([], state, len(state.rules) - 1, state.end_column)
