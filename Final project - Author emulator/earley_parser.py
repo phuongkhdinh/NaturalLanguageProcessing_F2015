@@ -4,6 +4,8 @@ import sys
 class Production():
     def __init__(self, *terms):
         self.terms = terms
+        if type(self.terms[0]) is tuple:
+            self.terms = self.terms[0]
     def gettype(self):
         return type(self.terms[0])
     def __len__(self):
@@ -31,9 +33,8 @@ class Rule():
         return self.name
     def __repr__(self):
         return "%s -> %s" % (self.name, " | ".join(repr(p) for p in self.productions))
-    def add(self, *productions):
-        print(productions)
-        self.productions.extend(productions)
+    def add(self, productions):
+        self.productions.append(productions)
 
 class State():
     def __init__(self, name, production, dot_index, start_column):
@@ -130,7 +131,6 @@ GAMMA_RULE = u"GAMMA"
 def parse(rule, text):
     table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
     table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
-    print(rule, text)
     for i, col in enumerate(table):
         predictedWords = set()
         for state in col:
@@ -146,11 +146,7 @@ def parse(rule, text):
                 elif i + 1 < len(table):
                     scan(table[i+1], state, term)
         
-
     print(predictedWords)
-
-
-
 
     # WILL WE END THE SENTENCE HERE?
 
@@ -189,42 +185,42 @@ def build_trees_helper(children, state, rule_index, end_column):
     return outputs
 
 
-Prep = Rule("Prep")
-NP = Rule("NP")
-PP = Rule("PP")
-PP.add(Production(Prep, NP))
-AND = Rule("AND")
-AND.add(Production("and"))
+# Prep = Rule("Prep")
+# NP = Rule("NP")
+# PP = Rule("PP")
+# PP.add(Production(Prep, NP))
+# AND = Rule("AND")
+# AND.add(Production("and"))
 
-NP.add(Production(tuple([NP, PP])), Production(tuple([NP, AND, NP])))
-Noun = Rule("Noun")
-Noun.add(Production("i"),Production("cats"),Production("dogs"),Production("can"))
-Aux = Rule("Aux")
-Aux.add(Production("can"),Production("may"),Production("will"))
-Verb = Rule("Verb")
-Verb.add(Production("like"),Production("can"),Production("fool"),Production("catch"))
-VP = Rule("VP")
+# NP.add(Production(tuple([NP, PP])), Production(tuple([NP, AND, NP])))
+# Noun = Rule("Noun")
+# Noun.add(Production("i"),Production("cats"),Production("dogs"),Production("can"))
+# Aux = Rule("Aux")
+# Aux.add(Production("can"),Production("may"),Production("will"))
+# Verb = Rule("Verb")
+# Verb.add(Production("like"),Production("can"),Production("fool"),Production("catch"))
+# VP = Rule("VP")
 
-VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
-
-
+# VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
 
 
-Prep.add(Production("in"),Production("like"),Production("with"))
-Det = Rule("Det", Production("the"),Production("an"),Production("a"))
 
 
-NP.add(Production(Det, Noun), Production(Noun))
-VP.add(Production(Verb))
-
-S = Rule("S", Production(NP, VP))
-ROOT = Rule("ROOT", Production(S))
+# Prep.add(Production("in"),Production("like"),Production("with"))
+# Det = Rule("Det", Production("the"),Production("an"),Production("a"))
 
 
-print("ORBT")
-for prod in NP.productions:
-    for rule in prod:
-            print(rule)
-print("OND")
-for tree in build_trees(parse(ROOT, "i can like cats")):
-    tree.print_()
+# NP.add(Production(Det, Noun), Production(Noun))
+# VP.add(Production(Verb))
+
+# S = Rule("S", Production(NP, VP))
+# ROOT = Rule("ROOT", Production(S))
+
+
+# print("ORBT")
+# for prod in NP.productions:
+#     for rule in prod:
+#             print(rule)
+# print("OND")
+# for tree in build_trees(parse(ROOT, "i can like cats")):
+#     tree.print_()

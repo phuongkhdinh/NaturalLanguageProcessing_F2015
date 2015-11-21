@@ -25,8 +25,8 @@ def parse_sentences(filename):
     f = open(filename, 'r')
     #t = open('trees.txt', 'w')
     #start = time.time()
-    for sentence in f.readlines()[:1]:
-        trees = parser.raw_parse(sentence)
+    for sentence in f.readlines()[:6]:
+        trees = parser.raw_parse(sentence.lower())
         for tree in trees:
             print(tree)
             extract_rules(tree)
@@ -69,7 +69,6 @@ def extract_string_rules(tree):
         else:
             print("Error: unexpected type")
             sys.exit(1)
-    print(left, "->", right)
     right = tuple(right)
     new_rule = (left, right)
     rules.add(new_rule)
@@ -82,21 +81,24 @@ def extract_rules(tree):
     production_objects = []
     if rule_name in rules:
         # Add new production to existing rule
+       # print(rule_name, "not in ")
         rule = rules[rule_name]
     else:
         # Create new rule object
         rule = Rule(rule_name)
         rules[rule_name] = rule
-    for i in range(len(tree)): 
-        # for every child in tree
-        if type(tree[i]) == str:
-            #print(rules[rule_name].productions)
-            production_objects.append(tree[i])
-            rule.add(Production(tree[i]))
-            return
-            #print(rules[rule_name].productions)
-        # for every nonterminal in tree
-        else: 
+    if type(tree[0]) == str:
+        #print(rules[rule_name].productions)
+        production_objects.append(tree[0])
+        rule.add(Production(tree[0]))
+        return
+    else:
+        for i in range(len(tree)): 
+            # for every child in tree
+
+                #print(rules[rule_name].productions)
+            # for every nonterminal in tree
+
             extract_rules(tree[i])
             name = tree[i].label()
             if name in rules:
@@ -105,9 +107,10 @@ def extract_rules(tree):
                 child_rule = Rule(name)
                 rules[name] = child_rule
                 production_objects.append(child_rule)
-    #print(rules[rule_name].productions)
+        #print(rules[rule_name].productions)
+            #rule.add(Production(tuple(production_objects)))
         rule.add(Production(tuple(production_objects)))
-    #print(rules[rule_name].productions)
+        #print(rules[rule_name].productions)
 
 
     #         print("not adding anything")          
@@ -139,19 +142,17 @@ def print_sentences(sentences):
 def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
-    #parse_sentences('./hemingway/sentences/sea.txt')
-    parse_sentences('test.txt')
-    print("done parsing")
+    parse_sentences('./hemingway/sentences/sea.txt')
+    #parse_sentences('test.txt')
     #print(rules["NP"].productions)
-    print("PRINTING")
-    for prod in rules["NP"].productions:
-        for rule in prod:
-            print(rule[0])
-        print()
+    # for prod in rules["NP"].productions:
+    #     for rule in prod:
+    #         print(rule)
+    #     print()
     #print(rules)
     #get_trees()
-    # for tree in build_trees(parse(rules["ROOT"], "I can like cats and dogs")):
-    #     tree.print_()
+    for tree in build_trees(parse(rules["ROOT"], "he was an old man")):
+        tree.print_()
 
 
 if __name__ == '__main__':
