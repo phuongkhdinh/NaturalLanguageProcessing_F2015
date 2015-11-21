@@ -185,7 +185,7 @@ def build_trees_helper(children, state, rule_index, end_column):
                 outputs.append(node)
     return outputs
 
-def main:
+def main():
     with open("grammar.dat", 'rb') as handle:
         grammar = pickle.loads(handle.read())
     with open("parser_probs.dat", 'rb') as handle:

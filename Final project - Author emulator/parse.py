@@ -202,7 +202,7 @@ def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt')
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 2)
     lm.train_corpus()
     # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
     # print("CC", lm.nonterminal_counts["CC"])
