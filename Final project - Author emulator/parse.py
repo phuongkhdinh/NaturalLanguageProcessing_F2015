@@ -43,7 +43,7 @@ class LanguageModel:
         if num_sentences == 'all':
             num_sentences = -1
         count = 0
-        for sentence in f.readlines()[240:num_sentences]:
+        for sentence in f.readlines()[:num_sentences]:
             if count%10==0:
                 print(count)
             trees = self.parser.raw_parse(sentence.lower())
@@ -51,7 +51,7 @@ class LanguageModel:
                 #print(tree)
                 self.nonterminal_counts['ROOT'] = 1
                 tokenized_sentence = self.tokenize_sentence(sentence)
-                if len(tokenized_sentence) > 8:
+                if len(tokenized_sentence) > 7:
                     self.extract_rules(tree)
                 ptree = ParentedTree.convert(tree)
                 self.get_bigram(ptree, tokenized_sentence)
@@ -267,7 +267,7 @@ def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt', 500)
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 130)
     lm.train_corpus()
     # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
     # print("CC", lm.nonterminal_counts["CC"])
