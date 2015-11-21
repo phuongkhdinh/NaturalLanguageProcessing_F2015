@@ -8,141 +8,136 @@ import nltk.data
 import time
 import sys
 from earley_parser import *
+from collections import Counter
+from math import log
 
-parser = stanford.StanfordParser(model_path="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
-rules = {} #(NP(prod1, prod2, prod3), VB(prod4, prod5))
+class LanguageModel:
 
-def tokenize_sentences():
-    """Tokenize corpus into sentences"""
-    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
-    f = open("hemingway/full_text/winner_take_nothing.txt")
-    data = f.read()
-    sentences = tokenizer.tokenize(data)
-    return sentences
+    def __init__(self):
+        self.parser = stanford.StanfordParser(model_path="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
+        self.grammar = {} 
+        self.probabilistic_parser_counts = Counter()
+        self.nonterminal_counts = Counter()
+        self.terminal_counts = Counter()
+        self.headword_bigram_counts = Counter() #headword_bigram_counts[(word1(preceding), word2)] = 17
+        self.probabilistic_parser_probs = Counter()
+        self.headword_bigram_probs = Counter()
 
-def parse_sentences(filename):
-    """Parse each sentence into a tree"""
-    f = open(filename, 'r')
-    #t = open('trees.txt', 'w')
-    #start = time.time()
-    for sentence in f.readlines()[:6]:
-        trees = parser.raw_parse(sentence.lower())
-        for tree in trees:
-            print(tree)
-            extract_rules(tree)
+    def tokenize_sentences(self):
+        """Tokenize corpus into sentences"""
+        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
+        f = open("hemingway/full_text/winner_take_nothing.txt")
+        data = f.read()
+        sentences = tokenizer.tokenize(data)
+        return sentences
 
-            # tree = ParentedTree.convert(tree)
-            # for i in range(5):
-            #     print(tree)
-            #     tree = tree[0]
-            #     if type(tree) == ParentedTree:
-            #         print("right:", tree.right_sibling())
+    def parse_sentences(self, filename):
+        """Parse each sentence into a tree"""
+        f = open(filename, 'r')
+        for sentence in f.readlines()[:2]:
+            trees = self.parser.raw_parse(sentence.lower())
+            for tree in trees:
+                #print(tree)
+                self.nonterminal_counts['ROOT'] = 1
+                self.extract_rules(tree)
+                ptree = ParentedTree.convert(tree)
+                self.get_bigram(ptree)
 
-            #while tree[0] != None:
-            # tree = tree[0][0][0]
-            
-            # print(tree.label())
-            # print(tree.right_sibling())
-            # pt = ParentedTree.convert(tree)
-            # print(pt[0].parent().label())
-            # print(pt.leaves())
-            # for leaf in pt.leaves():
-            #     print(pt.parent().label())
-            # t.write(str(tree))
-            # t.write("*")
-        # for dep_graphs in parser.raw_parse(sentence):
-        #   print(list(dep_graphs))
-        #   print("\n")
-    #end = time.time()
-    #print("Time:", end-start)
-
-def extract_string_rules(tree):
-    """Preliminary version of rule extraction, using strings"""
-    left = tree.label()
-    right = []
-    for i in range(len(tree)):
-        if type(tree[i]) == Tree:
-            right.append(tree[i].label())
-            extract_rules(tree[i])
-        elif type(tree[i]) == str:
-            right.append(tree[i])
-        else:
-            print("Error: unexpected type")
-            sys.exit(1)
-    right = tuple(right)
-    new_rule = (left, right)
-    rules.add(new_rule)
-
-def extract_rules(tree):
-    rule_name = tree.label()
-    rule = None
-    #rule = Rule(rule_name)
-    #rules.add(
-    production_objects = []
-    if rule_name in rules:
-        # Add new production to existing rule
-       # print(rule_name, "not in ")
-        rule = rules[rule_name]
-    else:
-        # Create new rule object
-        rule = Rule(rule_name)
-        rules[rule_name] = rule
-    if type(tree[0]) == str:
-        #print(rules[rule_name].productions)
-        production_objects.append(tree[0])
-        rule.add(Production(tree[0]))
-        return
-    else:
-        for i in range(len(tree)): 
-            # for every child in tree
-
-                #print(rules[rule_name].productions)
-            # for every nonterminal in tree
-
-            extract_rules(tree[i])
-            name = tree[i].label()
-            if name in rules:
-                production_objects.append(rules[name])
+    def extract_string_rules(self, tree):
+        """Preliminary version of rule extraction, using strings"""
+        left = tree.label()
+        right = []
+        for i in range(len(tree)):
+            if type(tree[i]) == Tree:
+                right.append(tree[i].label())
+                self.extract_rules(tree[i])
+            elif type(tree[i]) == str:
+                right.append(tree[i])
             else:
-                child_rule = Rule(name)
-                rules[name] = child_rule
-                production_objects.append(child_rule)
-        #print(rules[rule_name].productions)
-            #rule.add(Production(tuple(production_objects)))
-        rule.add(Production(tuple(production_objects)))
-        #print(rules[rule_name].productions)
+                print("Error: unexpected type")
+                sys.exit(1)
+        right = tuple(right)
+        new_rule = (left, right)
+        self.grammar.add(new_rule)
+
+    def extract_rules(self, tree):
+        rule_name = tree.label()
+        rule = None
+        production_objects = []
+        if rule_name in self.grammar:
+            # Add new production to existing rule
+            rule = self.grammar[rule_name]
+        else:
+            # Create new rule object
+            rule = Rule(rule_name)
+            self.grammar[rule_name] = rule
+        if type(tree[0]) == str:
+            production_objects.append(tree[0])
+            rule.add(Production(tree[0]))
+            self.probabilistic_parser_counts[(rule_name, tree[0])] += 1
+            self.terminal_counts[tree[0]] += 1
+            return
+        else:
+            for i in range(len(tree)): 
+                # for every nonterminal child in tree
+                self.extract_rules(tree[i])
+                name = tree[i].label()
+                self.nonterminal_counts[tree[i].label()] += 1
+                if name in self.grammar:
+                    production_objects.append(self.grammar[name])
+                else:
+                    child_rule = Rule(name)
+                    self.grammar[name] = child_rule
+                    production_objects.append(child_rule)
+
+            rule.add(Production(tuple(production_objects)))
+            self.probabilistic_parser_counts[(rule_name, tuple([obj.name for obj in production_objects]))] += 1
 
 
-    #         print("not adding anything")          
-    #         prod_objects = []
-    #         for item in production_items:
-    #             if item in rules:
-    #                 prod_objects.append(rules[item])
-    #             else:
-    #                 prod_objects.append(Rule(item))
-    #         print("rule: ", rule)
-    #         print("ProductioN:", tuple(prod_objects))
-    #         rules[rule].add(Production(tuple(prod_objects)))
-    #         extract_rules(tree[i])
-    # print("ryle",rules)
-
-# def make_parented_trees():
-#     ## for each tree, pt = ParentedTree.convert(tree)
+    def get_bigram(self, tree):
+        # For each child
+        for i in range(len(tree)):
+            print("tree len", len(tree))
+            if len(tree[i]) > 0 and type(tree[i]) != str:
+                self.get_bigram(tree[i])
+            # For each terminal
+            else:
+                #print("ptree: ", tree)
+                self.get_headword(tree)
 
 
-# GUI
-# for line in sentences:
-#     for sentence in line:
-#         sentence.draw()
+    # Node must be parented tree
+    def get_headword(self, node):
+        tag = node.label()
+        #print(node, tag)
+        while node.label() != 'ROOT' and not node.left_sibling():
+            #print(node)
+            node = node.parent()
+        if node.label() != 'ROOT': 
+            print("left:",len(node.left_sibling()))
 
-def print_sentences(sentences):
-    for sentence in sentences:
-        print(sentence)
+
+
+    def print_sentences(self, sentences):
+        for sentence in sentences:
+            print(sentence)
+
+    def train_corpus(self):
+        for item in self.probabilistic_parser_counts: #probabilitistic_parser[(LHS, RHS as tuple)] = 0.55
+            #print(item[0])
+            self.probabilistic_parser_probs[item] = log(self.probabilistic_parser_counts[item]) - log(self.nonterminal_counts[item[0]])
+        # for bigram in self.headword_bigram_counts: #headword_bigram[(word1, word2)] = 0.55
+        #     self.headword_bigram_probs[bigram] = log(self.headword_bigram_counts[bigram]) - log(self.terminal_counts[bigram[0]])
 
 def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
-    parse_sentences('./hemingway/sentences/sea.txt')
+    lm = LanguageModel()
+    lm.parse_sentences('./hemingway/sentences/sea.txt')
+    lm.train_corpus()
+    print("count:", lm.probabilistic_parser_counts[("DT", "the")])
+    print("CC", lm.nonterminal_counts["CC"])
+    print("f", lm.terminal_counts["fish"])
     #parse_sentences('test.txt')
     #print(rules["NP"].productions)
     # for prod in rules["NP"].productions:
@@ -151,8 +146,12 @@ def main():
     #     print()
     #print(rules)
     #get_trees()
-    for tree in build_trees(parse(rules["ROOT"], "he was an old man")):
+
+
+    #pickle
+    for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
         tree.print_()
+    
 
 
 if __name__ == '__main__':
