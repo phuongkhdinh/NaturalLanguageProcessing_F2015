@@ -42,16 +42,20 @@ class LanguageModel:
         f = open(filename, 'r')
         if num_sentences == 'all':
             num_sentences = -1
-        for sentence in f.readlines()[:num_sentences]:
+        count = 0
+        for sentence in f.readlines()[240:num_sentences]:
+            if count%10==0:
+                print(count)
             trees = self.parser.raw_parse(sentence.lower())
             for tree in trees:
                 #print(tree)
                 self.nonterminal_counts['ROOT'] = 1
                 tokenized_sentence = self.tokenize_sentence(sentence)
-                if len(tokenized_sentence) > 4:
+                if len(tokenized_sentence) > 8:
                     self.extract_rules(tree)
                 ptree = ParentedTree.convert(tree)
                 self.get_bigram(ptree, tokenized_sentence)
+            count+=1
 
     def extract_rules(self, tree):
         rule_name = tree.label()
@@ -103,13 +107,17 @@ class LanguageModel:
     def get_headword(self, node, label, sentence):
         if type(node) == str:
             #print("wow", node)
-            if sentence.index(label)-1 > -1:     
-            #Do bigram
-                previous_word = sentence[sentence.index(label)-1]# Choose previous word
-                #print("Done", previous_word, label)            
-                self.headword_bigram_counts[(previous_word, label)] += 1  
-            updated_node = True
-            return
+            try: #Sometimes, there are discrepancy btw ntlk tokenizer and stanford tokenizer
+                if sentence.index(label)-1 > -1:     
+                #Do bigram
+                    previous_word = sentence[sentence.index(label)-1]# Choose previous word
+                    #print("Done", previous_word, label)            
+                    self.headword_bigram_counts[(previous_word, label)] += 1  
+                updated_node = True
+            except:
+                pass
+            finally:
+                return
         tag = node.label()
         # print(node, tag)
         while node.parent().label() != 'ROOT' and not node.left_sibling():
@@ -259,7 +267,7 @@ def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt', 100)
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 500)
     lm.train_corpus()
     # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
     # print("CC", lm.nonterminal_counts["CC"])
