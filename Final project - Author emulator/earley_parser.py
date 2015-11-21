@@ -2,6 +2,7 @@
 
 import sys
 import pickle
+from math import exp, log
 class Production():
     def __init__(self, *terms):
         self.terms = terms
@@ -129,36 +130,66 @@ def complete(col, state):
 
 GAMMA_RULE = u"GAMMA"
 
-def parse(rule, text):
+def parse(rule, text, parserProbs, headwordBigram):
     table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
     table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
+    ruleTransProbMatrix = {}
+    predictWordProbMatrix = {}
+
     for i, col in enumerate(table):
-        predictedWords = set()
+        #predictedWords = set()
+
         for state in col:
             if state.completed():
                 complete(col, state)
             else:
                 term = state.next_term()
                 if isinstance(term, Rule):
-                    predictWord = predict(col, term)
+                    predictWords = predict(col, term)
                     # AMONG THESE WORDS, which one has the highest bigram (top 2)
-                    predictedWords |= predictWord
+                    #print(i)
+                    if i==len(text.split())-1:
+                        stateij = (state.name, tuple([obj.name for obj in state.production]))
+                        ruleTransProb = parserProbs[stateij]
+                        ruleTransProbMatrix[stateij] = ruleTransProb
+                        #predictWordProbMatrix[]
+                        for word in predictWords:
+                            wordEmissionProb =  parserProbs[(term.name, word)]
+                            #print(text.split()[i],word)
+                            if (text.split()[i],word) in headwordBigram:
+                                bigramTransProb = headwordBigram[(text.split()[i],word)]
+                            else:
+                                bigramTransProb = -99
+                            #print(ruleTransProb,wordEmissionProb, bigramTransProb)
+                            wordProb = ruleTransProb + wordEmissionProb + bigramTransProb
+
+                            if word in predictWordProbMatrix:
+                                predictWordProbMatrix[word] = max(wordProb, predictWordProbMatrix[word])
+                            else:
+                                predictWordProbMatrix[word] = wordProb
+
+                    #sys.exit()
+                    #for word in predictWords:
+
+                    #print(predictWord)
 
                 elif i + 1 < len(table):
                     scan(table[i+1], state, term)
         
-    print(predictedWords)
-
+    ### Choose one of the top 5
+    predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
+    #print(predictWordProbMatrix)
     # WILL WE END THE SENTENCE HERE?
 
 
-
+    sentenceComplete = False
     for st in table[-1]:
         if st.name == GAMMA_RULE and st.completed():
-            return st
-    else:
-        print("No tree was built. Not legal sentence")
-        sys.exit(1)
+            sentenceComplete = True
+        # else:
+        #     print("No tree was built. Not legal sentence")
+        #     sys.exit(1)
+    return predictWordProbMatrix, sentenceComplete
 
 def build_trees(state):
     return build_trees_helper([], state, len(state.rules) - 1, state.end_column)
@@ -193,11 +224,9 @@ def main():
     with open("headword_bigram.dat", 'rb') as handle:
         headword_bigram = pickle.loads(handle.read())    
 
-    for tree in build_trees(parse(grammar["ROOT"], "he was an old man")):
+    for tree in build_trees(parse(grammar["ROOT"], "he was an old man", parser_probs, headword_bigram)):
         tree.print_()
 
-    print(parser_probs)
-    print(headword_bigram)
 
 
 if __name__ == '__main__':
