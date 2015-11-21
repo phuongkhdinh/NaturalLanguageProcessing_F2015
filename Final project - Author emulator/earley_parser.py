@@ -130,7 +130,7 @@ GAMMA_RULE = u"GAMMA"
 def parse(rule, text):
     table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
     table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
-
+    print(rule, text)
     for i, col in enumerate(table):
         predictedWords = set()
         for state in col:
@@ -189,23 +189,42 @@ def build_trees_helper(children, state, rule_index, end_column):
     return outputs
 
 
-
+Prep = Rule("Prep")
 NP = Rule("NP")
+PP = Rule("PP")
+PP.add(Production(Prep, NP))
+AND = Rule("AND")
+AND.add(Production("and"))
+
+NP.add(Production(tuple([NP, PP])), Production(tuple([NP, AND, NP])))
+Noun = Rule("Noun")
+Noun.add(Production("i"),Production("cats"),Production("dogs"),Production("can"))
+Aux = Rule("Aux")
+Aux.add(Production("can"),Production("may"),Production("will"))
+Verb = Rule("Verb")
+Verb.add(Production("like"),Production("can"),Production("fool"),Production("catch"))
 VP = Rule("VP")
 
-Noun = Rule("Noun", Production("i"),Production("cats"),Production("dogs"),Production("can"))
-Aux = Rule("Aux", Production("can"),Production("may"),Production("will"))
-Verb = Rule("Verb", Production("like"),Production("can"),Production("fool"),Production("catch"))
-Prep = Rule("Prep", Production("in"),Production("like"),Production("with"))
+VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
+
+
+
+
+Prep.add(Production("in"),Production("like"),Production("with"))
 Det = Rule("Det", Production("the"),Production("an"),Production("a"))
-AND = Rule("AND", Production("and"))
+
 
 NP.add(Production(Det, Noun), Production(Noun))
 VP.add(Production(Verb))
-PP = Rule("PP", Production(Prep, NP))
-NP.add(Production(NP, PP), Production(NP, AND, NP))
-VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
-S = Rule("S", Production(NP, VP))
 
-for tree in build_trees(parse(S, "i can will")):
+S = Rule("S", Production(NP, VP))
+ROOT = Rule("ROOT", Production(S))
+
+
+print("ORBT")
+for prod in NP.productions:
+    for rule in prod:
+            print(rule)
+print("OND")
+for tree in build_trees(parse(ROOT, "i can like cats")):
     tree.print_()
