@@ -37,10 +37,12 @@ class LanguageModel:
         tokenized_sentence = word_tokenize(sentence)
         return tokenized_sentence
 
-    def parse_sentences(self, filename):
+    def parse_sentences(self, filename, num_sentences):
         """Parse each sentence into a tree"""
         f = open(filename, 'r')
-        for sentence in f.readlines()[:2]:
+        if num_sentences == 'all':
+            num_sentences = -1
+        for sentence in f.readlines()[:num_sentences]:
             trees = self.parser.raw_parse(sentence.lower())
             for tree in trees:
                 #print(tree)
