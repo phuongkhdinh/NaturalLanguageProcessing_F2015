@@ -185,20 +185,23 @@ def build_trees_helper(children, state, rule_index, end_column):
                 outputs.append(node)
     return outputs
 
+def main:
+    with open("grammar.dat", 'rb') as handle:
+        grammar = pickle.loads(handle.read())
+    with open("parser_probs.dat", 'rb') as handle:
+        parser_probs = pickle.loads(handle.read())
+    with open("headword_bigram.dat", 'rb') as handle:
+        headword_bigram = pickle.loads(handle.read())    
 
-with open("grammar.dat", 'rb') as handle:
-    grammar = pickle.loads(handle.read())
-with open("parser_probs.dat", 'rb') as handle:
-    parser_probs = pickle.loads(handle.read())
-with open("headword_bigram.dat", 'rb') as handle:
-    headword_bigram = pickle.loads(handle.read())    
+    for tree in build_trees(parse(grammar["ROOT"], "he was an old man")):
+        tree.print_()
 
-for tree in build_trees(parse(grammar["ROOT"], "he was an old man")):
-    tree.print_()
+    print(parser_probs)
+    print(headword_bigram)
 
-print(parser_probs)
-print(headword_bigram)
 
+if __name__ == '__main__':
+    main()
 # Prep = Rule("Prep")
 # NP = Rule("NP")
 # PP = Rule("PP")
