@@ -22,8 +22,8 @@ class LanguageModel:
         self.nonterminal_counts = Counter()
         self.terminal_counts = Counter()
         self.headword_bigram_counts = Counter() #headword_bigram_counts[(word1(preceding), word2)] = 17
-        self.probabilistic_parser_probs = Counter()
-        self.headword_bigram_probs = Counter()
+        self.probabilistic_parser_probs = {}
+        self.headword_bigram_probs = {}
 
     def tokenize_sentences(self):
         """Tokenize corpus into sentences"""
@@ -47,27 +47,11 @@ class LanguageModel:
             for tree in trees:
                 #print(tree)
                 self.nonterminal_counts['ROOT'] = 1
-                self.extract_rules(tree)
-                ptree = ParentedTree.convert(tree)
                 tokenized_sentence = self.tokenize_sentence(sentence)
+                if len(tokenized_sentence) > 4:
+                    self.extract_rules(tree)
+                ptree = ParentedTree.convert(tree)
                 self.get_bigram(ptree, tokenized_sentence)
-
-    def extract_string_rules(self, tree):
-        """Preliminary version of rule extraction, using strings"""
-        left = tree.label()
-        right = []
-        for i in range(len(tree)):
-            if type(tree[i]) == Tree:
-                right.append(tree[i].label())
-                self.extract_rules(tree[i])
-            elif type(tree[i]) == str:
-                right.append(tree[i])
-            else:
-                print("Error: unexpected type")
-                sys.exit(1)
-        right = tuple(right)
-        new_rule = (left, right)
-        self.grammar.add(new_rule)
 
     def extract_rules(self, tree):
         rule_name = tree.label()
@@ -119,9 +103,11 @@ class LanguageModel:
     def get_headword(self, node, label, sentence):
         if type(node) == str:
             #print("wow", node)
-            previous_word = node
-            self.headword_bigram_counts[(previous_word, label)] += 1
-            print("wow", previous_word, label)     
+            if sentence.index(label)-1 > -1:     
+            #Do bigram
+                previous_word = sentence[sentence.index(label)-1]# Choose previous word
+                #print("Done", previous_word, label)            
+                self.headword_bigram_counts[(previous_word, label)] += 1  
             updated_node = True
             return
         tag = node.label()
@@ -175,16 +161,85 @@ class LanguageModel:
                 if sentence.index(label)-1 > -1:     
                 #Do bigram
                     previous_word = sentence[sentence.index(label)-1]# Choose previous word
-                    print("Done", previous_word, label)            
+                    #print("Done", previous_word, label)            
                     self.headword_bigram_counts[(previous_word, label)] += 1
                 return
 
             if not updated_node:
-                print("false. Choose next", node)
+                #print("false. Choose next", node)
                 # Choose the rightmost tree
 
                 node = node.left_sibling()
             self.get_headword(node, label, sentence)
+    # def get_headword(self, node, label, sentence):
+    #     if type(node) == str:
+    #         #print("wow", node)
+    #         previous_word = node
+    #         self.headword_bigram_counts[(previous_word, label)] += 1
+    #         print("wow", previous_word, label)     
+    #         updated_node = True
+    #         return
+    #     tag = node.label()
+    #     # print(node, tag)
+    #     while node.parent().label() != 'ROOT' and not node.left_sibling():
+    #     #     #print(node)
+    #         node = node.parent()
+    #     #print(node.label())
+    #     #node = node.parent()
+    #     #print("a",node.label())
+    #     updated_node = False
+    #     if node.parent().label() != 'ROOT': 
+    #         #print(node.label(), "label",label)
+
+    #         if node.parent().label() == "NP":
+    #             for sibling in node.left_sibling():         
+    #                 #print("NP: ",node.label())
+    #                 if type(sibling) is str:
+    #                     node = sibling
+    #                     updated_node = True
+    #                     break
+    #                 elif sibling.label() in ["NN", "NNS", "NNP", "NNPS", "PRP"]:
+    #                     node = sibling
+    #                     updated_node = True
+    #                     break
+    #         elif node.parent().label() == "VP":
+    #             #print(node.parent())
+    #             for sibling in node.left_sibling(): 
+    #                 #print("sib",node.label(),sibling)
+    #                 if type(sibling) is str:
+    #                     node = sibling
+    #                     updated_node = True
+    #                     break
+    #                 elif sibling.label() in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]:
+    #                     node = sibling
+    #                     updated_node = True
+    #                     break
+    #     #         #Choose Verb
+    #         elif node.parent().label() ==  "VBZ" or node.parent().label() == "VBD":
+    #             #Choose W__ or N__
+    #             for sibling in node.left_sibling():  
+    #                 if type(sibling) is str:
+    #                     node = sibling
+    #                     updated_node = True
+    #                     break
+    #                 elif sibling.label()[0] in ["W", "N"]:
+    #                     node = sibling
+    #                     updated_node = True
+    #                     break
+    #         elif node.parent().label() ==  "IN" or  node.parent().label()[0] == "W" or node.parent().label() == "S":
+    #             if sentence.index(label)-1 > -1:     
+    #             #Do bigram
+    #                 previous_word = sentence[sentence.index(label)-1]# Choose previous word
+    #                 print("Done", previous_word, label)            
+    #                 self.headword_bigram_counts[(previous_word, label)] += 1
+    #             return
+
+    #         if not updated_node:
+    #             print("false. Choose next", node)
+    #             # Choose the rightmost tree
+
+    #             node = node.left_sibling()
+    #         self.get_headword(node, label, sentence)
 
 
     def print_sentences(self, sentences):
@@ -194,15 +249,17 @@ class LanguageModel:
     def train_corpus(self):
         for item in self.probabilistic_parser_counts: #probabilitistic_parser[(LHS, RHS as tuple)] = 0.55
             #print(item[0])
-            self.probabilistic_parser_probs[item] = log(self.probabilistic_parser_counts[item]) - log(self.nonterminal_counts[item[0]])
-        # for bigram in self.headword_bigram_counts: #headword_bigram[(word1, word2)] = 0.55
-        #     self.headword_bigram_probs[bigram] = log(self.headword_bigram_counts[bigram]) - log(self.terminal_counts[bigram[0]])
+            if item[0] in self.nonterminal_counts and item in self.probabilistic_parser_counts:
+                self.probabilistic_parser_probs[item] = log(self.probabilistic_parser_counts[item]) - log(self.nonterminal_counts[item[0]])
+        for bigram in self.headword_bigram_counts: #headword_bigram[(word1, word2)] = 0.55
+            if bigram[0] in self.terminal_counts and bigram in self.headword_bigram_counts:
+                self.headword_bigram_probs[bigram] = log(self.headword_bigram_counts[bigram]) - log(self.terminal_counts[bigram[0]])
 
 def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt', 2)
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 100)
     lm.train_corpus()
     # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
     # print("CC", lm.nonterminal_counts["CC"])
