@@ -1,7 +1,8 @@
 import os
 from nltk.parse import stanford
-from nltk.tree import ParentedTree
-from nltk.tree import Tree
+from nltk.tree import ParentedTree, Tree
+#from nltk.tree import Tree
+from nltk import word_tokenize
 os.environ['STANFORD_PARSER'] = './stanford-parser-full-2015-04-20/'
 os.environ['STANFORD_MODELS'] = './stanford-parser-full-2015-04-20/'
 import nltk.data
@@ -32,17 +33,22 @@ class LanguageModel:
         sentences = tokenizer.tokenize(data)
         return sentences
 
+    def tokenize_sentence(self, sentence):
+        tokenized_sentence = word_tokenize(sentence)
+        return tokenized_sentence
+
     def parse_sentences(self, filename):
         """Parse each sentence into a tree"""
         f = open(filename, 'r')
-        for sentence in f.readlines()[:5]:
+        for sentence in f.readlines()[:2]:
             trees = self.parser.raw_parse(sentence.lower())
             for tree in trees:
                 #print(tree)
                 self.nonterminal_counts['ROOT'] = 1
                 self.extract_rules(tree)
                 ptree = ParentedTree.convert(tree)
-                self.get_bigram(ptree, sentence.split())
+                tokenized_sentence = self.tokenize_sentence(sentence)
+                self.get_bigram(ptree, tokenized_sentence)
 
     def extract_string_rules(self, tree):
         """Preliminary version of rule extraction, using strings"""
@@ -210,7 +216,7 @@ def main():
 
 
     #pickle
-    #pickle the headword bigram
+    #pickle the headword bigramsssdfsdf
     with open("headword_bigram.dat", "wb") as outFile:
         pickle.dump(lm.headword_bigram_probs, outFile)
     #pickle the probabilistic parser probs (in log)
