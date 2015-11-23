@@ -1,4 +1,5 @@
 # An early Parser with some twist to work for prediction purpose
+# Reference from Charty project
 
 import sys
 import pickle
@@ -9,8 +10,6 @@ class Rule():
     def __init__(self, name, *productions):
         self.name = name
         self.productions = list(productions)
-    def __repr__(self):
-        return "%s -> %s" % (self.name, " | ".join(repr(p) for p in self.productions))
     def __str__(self):
         return self.name
     def add(self, productions):
@@ -176,9 +175,8 @@ class Earley_Parser():
             
         ### Rank word by probs
         predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
-        n = 5
+        n = 4
         topPredictedWord = predictWordProbMatrix[:min(n, len(predictWordProbMatrix))]
-        #print(predictWordProbMatrix)
 
 
 
@@ -189,6 +187,4 @@ class Earley_Parser():
                 sentenceComplete = True
                 return topPredictedWord, sentenceComplete
         else:
-            #print("No tree was built. Not legal sentence")
             return topPredictedWord, sentenceComplete
-            #sys.exit(1)
