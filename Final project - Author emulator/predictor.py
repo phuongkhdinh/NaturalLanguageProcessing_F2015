@@ -1,3 +1,12 @@
+'''
+    predictor.py
+    Written for CS322 - Natural Language Processing
+    By Julia Kroll and Phuong Dinh
+    This file read (optional) Language Model input / or use our default Hemingway LM
+    Take in a starting phrase
+    Generate a Hemingway-styled sentence.
+'''
+
 from earley_parser import *
 import random
 from nltk import word_tokenize
@@ -6,6 +15,9 @@ import sys
 
 
 def generate_sentence(phrase, grammar, parser_probs, headword_bigram):
+    '''
+    This function recursively generate sentence till it's grammatically correct
+    '''
     min_length = random.randint(5,7) # Minimum number of words in sentence
     top_selected_words, is_complete = Earley_Parser().parse(grammar["ROOT"], phrase, parser_probs, headword_bigram) # returns sorted dictionary of possible words and their probabilities
     tokenized_phrase = word_tokenize(phrase)
@@ -20,7 +32,11 @@ def generate_sentence(phrase, grammar, parser_probs, headword_bigram):
         sys.stdout.flush()
         phrase = phrase + " " + selected_word[0]
         return generate_sentence(phrase, grammar, parser_probs, headword_bigram)
+
 def readInput():
+    '''
+    Read user input (if any)
+    '''
     if len(sys.argv) == 4:
         grammar_file = sys.argv[1]
         parser_probs_file = sys.argv[2]

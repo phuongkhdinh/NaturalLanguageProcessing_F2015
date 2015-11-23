@@ -1,3 +1,9 @@
+'''
+    training.py
+    Written for CS322 - Natural Language Processing
+    By Phuong Dinh and Julia Kroll
+'''
+
 import os
 from nltk.parse import stanford
 from nltk.tree import ParentedTree, Tree
