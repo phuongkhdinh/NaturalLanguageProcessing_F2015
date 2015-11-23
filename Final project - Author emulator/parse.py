@@ -102,6 +102,8 @@ class LanguageModel:
             node = node.left_sibling()
         return left_siblings
 
+
+
     def get_bigram(self, tree, sentence):
         # For each child
         for i in range(len(tree)):
@@ -109,12 +111,11 @@ class LanguageModel:
             if type(tree[i]) != str:
                 if len(tree[i]) > 0:
                     self.get_bigram(tree[i], sentence)
-            # For each terminal
+            # For each terminal - string
             else:
-                print("ptree: ", tree[i])
+                #print("ptree: ", tree[i])
                 self.get_headword(tree, tree[i], sentence)
 
-                
     # # Node must be parented tree
     # def get_headword(self, node, label, sentence):
     #     if type(node) == str:
@@ -193,13 +194,13 @@ class LanguageModel:
     #         self.get_headword(node, label, sentence)
             
     def get_headword(self, node, label, sentence):
-        # if type(node) == str:
-        #     #print("wow", node)
-        #     previous_word = node
-        #     self.headword_bigram_counts[(previous_word, label)] += 1
-        #     print("wow", previous_word, label)     
-        #     updated_node = True
-        #     return
+        if type(node) == str:
+            #print("wow", node)
+            previous_word = node
+            self.headword_bigram_counts[(previous_word, label)] += 1
+            print("wow", previous_word, label)     
+            updated_node = True
+            return
         tag = node.label()
         # print(node, tag)
         while node.parent().label() != 'ROOT' and node.left_sibling() is not None:
@@ -207,7 +208,7 @@ class LanguageModel:
             node = node.parent()
         #print(node.label())
         #node = node.parent()
-        print("label",node.label())
+        #print("label",node.label())
         updated_node = False
         if node.parent().label() != 'ROOT': 
             #print(node.label(), "label",label)
@@ -263,7 +264,6 @@ class LanguageModel:
 
                 node = node.left_sibling()
             self.get_headword(node, label, sentence)
-
 
     def print_sentences(self, sentences):
         for sentence in sentences:
