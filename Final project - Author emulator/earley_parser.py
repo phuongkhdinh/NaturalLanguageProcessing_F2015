@@ -176,7 +176,7 @@ class Earley_Parser():
             
         ### Rank word by probs
         predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
-        n = 4
+        n = 5
         topPredictedWord = predictWordProbMatrix[:min(n, len(predictWordProbMatrix))]
         #print(predictWordProbMatrix)
 
