@@ -16,12 +16,12 @@ with open("headword_bigram.dat", 'rb') as handle:
 def generate_sentence(phrase):
 	print("Phrase so far:", phrase)
 	n = 3 # Number of words to consider
-	min_length = random.randint(5,8) # Minimum number of words in sentence
+	min_length = random.randint(4,6) # Minimum number of words in sentence
 	all_possible_words, is_complete = parse(grammar["ROOT"], phrase, parser_probs, headword_bigram) # returns sorted dictionary of possible words and their probabilities
 	#print(all_possible_words)
 	#tokenized_sentence = word_tokenize(sentence)
 	tokenized_phrase = word_tokenize(phrase)
-	print(is_complete, len(tokenized_phrase), is_complete and len(tokenized_phrase) > min_length)
+	#print(is_complete, len(tokenized_phrase), is_complete and len(tokenized_phrase) > min_length)
 	if (is_complete and len(tokenized_phrase) > min_length) or (len(all_possible_words) == 0) or (len(tokenized_phrase) > 12):
 		print(phrase, is_complete)
 		return phrase, is_complete
@@ -29,7 +29,7 @@ def generate_sentence(phrase):
 		n = min(n, len(all_possible_words))
 		top_n = all_possible_words[:n]
 		selected_word = top_n[random.randint(0, n-1)]
-		while selected_word == tokenized_phrase[-1]:
+		while selected_word[0] == tokenized_phrase[-1]:
 			selected_word = top_n[random.randint(0, n-1)]
 		#print(phrase, selected_word)
 		phrase = phrase + " " + selected_word[0]
