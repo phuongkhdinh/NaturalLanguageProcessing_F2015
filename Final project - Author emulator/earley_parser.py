@@ -3,6 +3,16 @@
 import sys
 import pickle
 from math import exp, log
+
+
+class Rule():
+    def __init__(self, name, *productions):
+        self.name = name
+        self.productions = list(productions)
+    def add(self, productions):
+        self.productions.append(productions)
+
+
 class Production():
     def __init__(self, *terms):
         self.terms = terms
@@ -16,8 +26,6 @@ class Production():
         return self.terms[index]
     def __iter__(self):
         return iter(self.terms)
-    def __repr__(self):
-        return " ".join(str(t) for t in self.terms)
     def __eq__(self, other):
         if not isinstance(other, Production):
             return False
@@ -27,17 +35,6 @@ class Production():
     def __hash__(self):
         return hash(self.terms)
 
-class Rule():
-    def __init__(self, name, *productions):
-        self.name = name
-        self.productions = list(productions)
-    def __str__(self):
-        return self.name
-    def __repr__(self):
-        return "%s -> %s" % (self.name, " | ".join(repr(p) for p in self.productions))
-    def add(self, productions):
-        self.productions.append(productions)
-
 class State():
     def __init__(self, name, production, dot_index, start_column):
         self.name = name
@@ -46,10 +43,6 @@ class State():
         self.end_column = None
         self.dot_index = dot_index
         self.rules = [t for t in production if isinstance(t, Rule)]
-    def __repr__(self):
-        terms = [str(p) for p in self.production]
-        terms.insert(self.dot_index, u"$")
-        return "%-5s -> %-16s [%s-%s]" % (self.name, " ".join(terms), self.start_column, self.end_column)
     def __eq__(self, other):
         return (self.name, self.production, self.dot_index, self.start_column) == \
             (other.name, other.production, other.dot_index, other.start_column)
@@ -70,8 +63,6 @@ class Column():
         self.token = token
         self.states = []
         self._unique = set()
-    def __str__(self):
-        return str(self.index)
     def __len__(self):
         return len(self.states)
     def __iter__(self):
@@ -111,7 +102,7 @@ def predict(col, rule):
     for prod in rule.productions:
         col.add(State(rule.name, prod, 0, col))
         if prod.gettype() is str:
-            predictWords.add(prod.__getitem__(0))
+            predictWords.add(prod[0])
     return predictWords
 def scan(col, state, token):
     if token != col.token:
@@ -128,11 +119,11 @@ def complete(col, state):
         if term.name == state.name:
             col.add(State(st.name, st.production, st.dot_index + 1, st.start_column))
 
-GAMMA_RULE = u"GAMMA"
+GAMMA = u"GAMMA"
 
 def parse(rule, text, parserProbs, headwordBigram):
     table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
-    table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
+    table[0].add(State(GAMMA, Production(rule), 0, table[0]))
     parserProbs[('GAMMA', ('ROOT',))] = 0.0
     ruleTransProbMatrix = {}
     predictWordProbMatrix = {}
@@ -162,7 +153,7 @@ def parse(rule, text, parserProbs, headwordBigram):
                             if (text.split()[i],word) in headwordBigram:
                                 bigramTransProb = headwordBigram[(text.split()[i],word)]
                             else:
-                                bigramTransProb = -99
+                                bigramTransProb = -15
                             #print(ruleTransProb,wordEmissionProb, bigramTransProb)
                             wordProb = ruleTransProb + wordEmissionProb + bigramTransProb
 
@@ -177,45 +168,24 @@ def parse(rule, text, parserProbs, headwordBigram):
         
     ### Rank word by probs
     predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
+    n = 5
+    topPredictedWord = predictWordProbMatrix[:min(n, len(predictWordProbMatrix))]
     #print(predictWordProbMatrix)
 
 
 
     sentenceComplete = False
     for st in table[-1]:
-        if st.name == GAMMA_RULE and st.completed():
+        if st.name == GAMMA and st.completed():
             #return st
             sentenceComplete = True
-            return predictWordProbMatrix, sentenceComplete
+            return topPredictedWord, sentenceComplete
     else:
-        print("No tree was built. Not legal sentence")
-        return predictWordProbMatrix, sentenceComplete
-        sys.exit(1)
+        #print("No tree was built. Not legal sentence")
+        return topPredictedWord, sentenceComplete
+        #sys.exit(1)
 
-def build_trees(state):
-    return build_trees_helper([], state, len(state.rules) - 1, state.end_column)
 
-def build_trees_helper(children, state, rule_index, end_column):
-    if rule_index < 0:
-        return [Node(state, children)]
-    elif rule_index == 0:
-        start_column = state.start_column
-    else:
-        start_column = None
-    
-    rule = state.rules[rule_index]
-    outputs = []
-    for st in end_column:
-        if st is state:
-            break
-        if st is state or not st.completed() or st.name != rule.name:
-            continue
-        if start_column is not None and st.start_column != start_column:
-            continue
-        for sub_tree in build_trees(st):
-            for node in build_trees_helper([sub_tree] + children, state, rule_index - 1, st.start_column):
-                outputs.append(node)
-    return outputs
 
 def main():
     with open("grammar.dat", 'rb') as handle:
@@ -225,49 +195,7 @@ def main():
     with open("headword_bigram.dat", 'rb') as handle:
         headword_bigram = pickle.loads(handle.read())    
 
-    for tree in build_trees(parse(grammar["ROOT"], "he was an old man", parser_probs, headword_bigram)):
-        tree.print_()
-
 
 
 if __name__ == '__main__':
     main()
-# Prep = Rule("Prep")
-# NP = Rule("NP")
-# PP = Rule("PP")
-# PP.add(Production(Prep, NP))
-# AND = Rule("AND")
-# AND.add(Production("and"))
-
-# NP.add(Production(tuple([NP, PP])), Production(tuple([NP, AND, NP])))
-# Noun = Rule("Noun")
-# Noun.add(Production("i"),Production("cats"),Production("dogs"),Production("can"))
-# Aux = Rule("Aux")
-# Aux.add(Production("can"),Production("may"),Production("will"))
-# Verb = Rule("Verb")
-# Verb.add(Production("like"),Production("can"),Production("fool"),Production("catch"))
-# VP = Rule("VP")
-
-# VP.add(Production(VP, PP), Production(VP, NP, PP), Production(VP, NP),Production(Aux, VP, NP))
-
-
-
-
-# Prep.add(Production("in"),Production("like"),Production("with"))
-# Det = Rule("Det", Production("the"),Production("an"),Production("a"))
-
-
-# NP.add(Production(Det, Noun), Production(Noun))
-# VP.add(Production(Verb))
-
-# S = Rule("S", Production(NP, VP))
-# ROOT = Rule("ROOT", Production(S))
-
-
-# print("ORBT")
-# for prod in NP.productions:
-#     for rule in prod:
-#             print(rule)
-# print("OND")
-# for tree in build_trees(parse(ROOT, "i can like cats")):
-#     tree.print_()

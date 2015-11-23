@@ -89,6 +89,9 @@ class LanguageModel:
                     production_objects.append(child_rule)
 
             if (rule_name, tuple([obj.name for obj in production_objects])) not in self.probabilistic_parser_counts:
+                for obj in production_objects:
+                    if obj.name == "FRAG":
+                        return
                 rule.add(Production(tuple(production_objects)))
             self.probabilistic_parser_counts[(rule_name, tuple([obj.name for obj in production_objects]))] += 1
 
