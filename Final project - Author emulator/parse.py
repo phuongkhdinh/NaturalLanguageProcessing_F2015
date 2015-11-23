@@ -110,7 +110,7 @@ class LanguageModel:
                 if len(tree[i]) > 0:
                     self.get_bigram(tree[i], sentence)
             # For each terminal
-            elif type(tree[i]) == str:
+            else:
                 print("ptree: ", tree[i])
                 self.get_headword(tree, tree[i], sentence)
 
@@ -255,6 +255,8 @@ class LanguageModel:
                     self.headword_bigram_counts[(previous_word, label)] += 1
                 return
 
+            if node.left_sibling() is None:
+                return
             if not updated_node:
                 print("false. Choose next", node)
                 # Choose the rightmost tree
