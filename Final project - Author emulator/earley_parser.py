@@ -1,4 +1,4 @@
-# An early Parser - reference
+# An early Parser with some twist to work for prediction purpose
 
 import sys
 import pickle
@@ -97,93 +97,95 @@ class Node():
         for child in self.children:
             child.print_(level + 1)
 
-def predict(col, rule):
-    predictWords = set()
-    for prod in rule.productions:
-        col.add(State(rule.name, prod, 0, col))
-        if prod.gettype() is str:
-            predictWords.add(prod[0])
-    return predictWords
-def scan(col, state, token):
-    if token != col.token:
-        return
-    col.add(State(state.name, state.production, state.dot_index + 1, state.start_column))
+class Earley_Parser():
+    def __init__(self):
+        self.GAMMA = "GAMMA"
 
-def complete(col, state):
-    if not state.completed():
-        return
-    for st in state.start_column:
-        term = st.next_term()
-        if not isinstance(term, Rule):
-            continue
-        if term.name == state.name:
-            col.add(State(st.name, st.production, st.dot_index + 1, st.start_column))
+    def predict(self, col, rule):
+        predictWords = set()
+        for prod in rule.productions:
+            col.add(State(rule.name, prod, 0, col))
+            if prod.gettype() is str:
+                predictWords.add(prod[0])
+        return predictWords
+    def scan(self, col, state, token):
+        if token != col.token:
+            return
+        col.add(State(state.name, state.production, state.dot_index + 1, state.start_column))
 
-GAMMA = u"GAMMA"
+    def complete(self, col, state):
+        if not state.completed():
+            return
+        for st in state.start_column:
+            term = st.next_term()
+            if not isinstance(term, Rule):
+                continue
+            if term.name == state.name:
+                col.add(State(st.name, st.production, st.dot_index + 1, st.start_column))
 
-def parse(rule, text, parserProbs, headwordBigram):
-    table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
-    table[0].add(State(GAMMA, Production(rule), 0, table[0]))
-    parserProbs[('GAMMA', ('ROOT',))] = 0.0
-    ruleTransProbMatrix = {}
-    predictWordProbMatrix = {}
+    def parse(self, rule, text, parserProbs, headwordBigram):
+        table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
+        table[0].add(State(self.GAMMA, Production(rule), 0, table[0]))
+        parserProbs[('GAMMA', ('ROOT',))] = 0.0
+        ruleTransProbMatrix = {}
+        predictWordProbMatrix = {}
 
-    for i, col in enumerate(table):
-        #predictedWords = set()
+        for i, col in enumerate(table):
+            #predictedWords = set()
 
-        for state in col:
-            if state.completed():
-                complete(col, state)
-            else:
-                term = state.next_term()
-                if isinstance(term, Rule):
-                    if state.name == "ROOT" and len(state.production)==1 and state.production[0].name == "FRAG":
-                        continue
-                    predictWords = predict(col, term)
-                    # AMONG THESE WORDS, which one has the highest bigram (top 2)
-                    #print(i)
-                    if i==len(text.split())-1:
-                        stateij = (state.name, tuple([obj.name for obj in state.production]))
-                        ruleTransProb = parserProbs[stateij]
-                        ruleTransProbMatrix[stateij] = ruleTransProb
-                        #predictWordProbMatrix[]
-                        for word in predictWords:
-                            wordEmissionProb =  parserProbs[(term.name, word)]
-                            #print(text.split()[i],word)
-                            if (text.split()[i],word) in headwordBigram:
-                                bigramTransProb = headwordBigram[(text.split()[i],word)]
-                            else:
-                                bigramTransProb = -15
-                            #print(ruleTransProb,wordEmissionProb, bigramTransProb)
-                            wordProb = ruleTransProb + wordEmissionProb + bigramTransProb
+            for state in col:
+                if state.completed():
+                    self.complete(col, state)
+                else:
+                    term = state.next_term()
+                    if isinstance(term, Rule):
+                        if state.name == "ROOT" and len(state.production)==1 and state.production[0].name == "FRAG":
+                            continue
+                        predictWords = self.predict(col, term)
+                        # AMONG THESE WORDS, which one has the highest bigram (top 2)
+                        #print(i)
+                        if i==len(text.split())-1:
+                            stateij = (state.name, tuple([obj.name for obj in state.production]))
+                            ruleTransProb = parserProbs[stateij]
+                            ruleTransProbMatrix[stateij] = ruleTransProb
+                            #predictWordProbMatrix[]
+                            for word in predictWords:
+                                wordEmissionProb =  parserProbs[(term.name, word)]
+                                #print(text.split()[i],word)
+                                if (text.split()[i],word) in headwordBigram:
+                                    bigramTransProb = headwordBigram[(text.split()[i],word)]
+                                else:
+                                    bigramTransProb = -15
+                                #print(ruleTransProb,wordEmissionProb, bigramTransProb)
+                                wordProb = ruleTransProb + wordEmissionProb + bigramTransProb
 
-                            if word in predictWordProbMatrix:
-                                predictWordProbMatrix[word] = max(wordProb, predictWordProbMatrix[word])
-                            else:
-                                predictWordProbMatrix[word] = wordProb
-
-
-                elif i + 1 < len(table):
-                    scan(table[i+1], state, term)
-        
-    ### Rank word by probs
-    predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
-    n = 5
-    topPredictedWord = predictWordProbMatrix[:min(n, len(predictWordProbMatrix))]
-    #print(predictWordProbMatrix)
+                                if word in predictWordProbMatrix:
+                                    predictWordProbMatrix[word] = max(wordProb, predictWordProbMatrix[word])
+                                else:
+                                    predictWordProbMatrix[word] = wordProb
 
 
+                    elif i + 1 < len(table):
+                        self.scan(table[i+1], state, term)
+            
+        ### Rank word by probs
+        predictWordProbMatrix = sorted(predictWordProbMatrix.items(), key=lambda x: x[1], reverse=True)
+        n = 5
+        topPredictedWord = predictWordProbMatrix[:min(n, len(predictWordProbMatrix))]
+        #print(predictWordProbMatrix)
 
-    sentenceComplete = False
-    for st in table[-1]:
-        if st.name == GAMMA and st.completed():
-            #return st
-            sentenceComplete = True
+
+
+        sentenceComplete = False
+        for st in table[-1]:
+            if st.name == self.GAMMA and st.completed():
+                #return st
+                sentenceComplete = True
+                return topPredictedWord, sentenceComplete
+        else:
+            #print("No tree was built. Not legal sentence")
             return topPredictedWord, sentenceComplete
-    else:
-        #print("No tree was built. Not legal sentence")
-        return topPredictedWord, sentenceComplete
-        #sys.exit(1)
+            #sys.exit(1)
 
 
 
