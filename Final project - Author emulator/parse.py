@@ -95,6 +95,12 @@ class LanguageModel:
                 rule.add(Production(tuple(production_objects)))
             self.probabilistic_parser_counts[(rule_name, tuple([obj.name for obj in production_objects]))] += 1
 
+    def get_left_siblings(self, node):
+        left_siblings = []
+        while node.left_sibling() is not None:
+            left_siblings.append(node.left_sibling())
+            node = node.left_sibling()
+        return left_siblings
 
     def get_bigram(self, tree, sentence):
         # For each child
@@ -136,7 +142,7 @@ class LanguageModel:
             #print(node.label(), "label",label)
 
             if node.parent().label() == "NP":
-                for sibling in node.left_sibling():         
+                for sibling in self.get_left_siblings(node):         
                     #print("NP: ",node.label())
                     if type(sibling) is str:
                         node = sibling
@@ -148,7 +154,7 @@ class LanguageModel:
                         break
             elif node.parent().label() == "VP":
                 #print(node.parent())
-                for sibling in node.left_sibling(): 
+                for sibling in self.get_left_siblings(node): 
                     #print("sib",node.label(),sibling)
                     if type(sibling) is str:
                         node = sibling
@@ -161,7 +167,7 @@ class LanguageModel:
         #         #Choose Verb
             elif node.parent().label() ==  "VBZ" or node.parent().label() == "VBD":
                 #Choose W__ or N__
-                for sibling in node.left_sibling():  
+                for sibling in self.get_left_siblings(node):  
                     if type(sibling) is str:
                         node = sibling
                         updated_node = True
@@ -271,21 +277,21 @@ class LanguageModel:
 def main():
 
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt', 500)
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 100)
     lm.train_corpus()
 
 
 
     #pickle
     #pickle the headword bigramsssdfsdf
-    with open("headword_bigram200.dat", "wb") as outFile:
+    with open("headword_bigram_100sibs.dat", "wb") as outFile:
         pickle.dump(lm.headword_bigram_probs, outFile)
     #pickle the probabilistic parser probs (in log)
-    with open("parser_probs200.dat", "wb") as outFile:
+    with open("parser_probs_100sibs.dat", "wb") as outFile:
         pickle.dump(lm.probabilistic_parser_probs, outFile)
 
     #pickle the grammar
-    with open("grammar200.dat", "wb") as outFile:
+    with open("grammar_100sibs.dat", "wb") as outFile:
         pickle.dump(lm.grammar, outFile)
     # for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
     #     tree.print_()
