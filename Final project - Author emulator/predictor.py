@@ -15,7 +15,10 @@ def generate_sentence(phrase):
 	min_length = random.randint(4,6) # Minimum number of words in sentence
 	top_selected_words, is_complete = Earley_Parser().parse(grammar["ROOT"], phrase, parser_probs, headword_bigram) # returns sorted dictionary of possible words and their probabilities
 	tokenized_phrase = word_tokenize(phrase)
-	if (is_complete and len(tokenized_phrase) > min_length) or (len(top_selected_words) == 0) or (len(tokenized_phrase) > 12):
+
+	#print(is_complete, len(tokenized_phrase), is_complete and len(tokenized_phrase) > min_length)
+	if (is_complete and len(tokenized_phrase) > min_length) or (len(top_selected_words) == 0) or (len(tokenized_phrase) > 12) or (tokenized_phrase[-1] == '.'):
+		#print(phrase, is_complete)
 		return phrase, is_complete
 	else:
 		selected_word = top_selected_words[random.randint(0, len(top_selected_words)-1)]
@@ -38,7 +41,7 @@ def main():
 	while not is_complete and num_attempts < 6:
 		num_attempts += 1
 		phrase, is_complete = generate_sentence(starting_phrase)
-		sys.stdout.write("\nNot a legal sentence. Regenerate from beginning.")
+		sys.stdout.write("\nNot a legal sentence. Regenerate from beginning.\n")
 		sys.stdout.write("Sentence building: " + starting_phrase + " ")
 		sys.stdout.flush()
 	if phrase != "":
