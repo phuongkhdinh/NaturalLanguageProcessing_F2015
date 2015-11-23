@@ -3,16 +3,16 @@ import random
 from nltk import word_tokenize
 import sys
 
-with open("grammar500.dat", 'rb') as handle:
+with open("grammar_100sibs.dat", 'rb') as handle:
     grammar = pickle.loads(handle.read())
-with open("parser_probs500.dat", 'rb') as handle:
+with open("parser_probs_100sibs.dat", 'rb') as handle:
     parser_probs = pickle.loads(handle.read())
-with open("headword_bigram500.dat", 'rb') as handle:
+with open("headword_bigram_100sibs.dat", 'rb') as handle:
     headword_bigram = pickle.loads(handle.read()) 
 
-print(grammar)
+#print(grammar)
 def generate_sentence(phrase):
-	min_length = random.randint(4,6) # Minimum number of words in sentence
+	min_length = random.randint(5,7) # Minimum number of words in sentence
 	top_selected_words, is_complete = Earley_Parser().parse(grammar["ROOT"], phrase, parser_probs, headword_bigram) # returns sorted dictionary of possible words and their probabilities
 	tokenized_phrase = word_tokenize(phrase)
 
@@ -32,7 +32,8 @@ def generate_sentence(phrase):
 def main():
 	starting_phrase = " ".join(sys.argv[1:])
 	if starting_phrase == "":
-		print("User must enter some start word.")
+		sys.stdout.write("User must enter some start word.")
+		sys.stdout.flush()
 		sys.exit()
 	sys.stdout.write("Sentence building: " + starting_phrase + " ")
 	sys.stdout.flush()
@@ -40,15 +41,16 @@ def main():
 	num_attempts = 0
 	while not is_complete and num_attempts < 6:
 		num_attempts += 1
-		phrase, is_complete = generate_sentence(starting_phrase)
 		sys.stdout.write("\nNot a legal sentence. Regenerate from beginning.\n")
 		sys.stdout.write("Sentence building: " + starting_phrase + " ")
 		sys.stdout.flush()
-	if phrase != "":
-		print("\nDone. Finished sentence:", phrase)
-	else:
-		print("Cannot generate sentence starting with '" + starting_phrase+"'.")
+		phrase, is_complete = generate_sentence(starting_phrase)
 
+	if phrase != "":
+		sys.stdout.write("\nDone. Finished sentence: "+ phrase+"\n")
+	else:
+		sys.stdout.write("Cannot generate sentence starting with '" + starting_phrase+"'.\n")
+	sys.stdout.flush()
 
 if __name__ == '__main__':
 	main()

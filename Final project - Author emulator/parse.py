@@ -48,9 +48,9 @@ class LanguageModel:
                 print(count)
             trees = self.parser.raw_parse(sentence.lower())
             for tree in trees:
-                self.nonterminal_counts['ROOT'] = 1
+                self.nonterminal_counts['ROOT'] += 1
                 tokenized_sentence = self.tokenize_sentence(sentence)
-                if len(tokenized_sentence) > 10:
+                if len(tokenized_sentence) > 5:
                     self.extract_rules(tree)
                 ptree = ParentedTree.convert(tree)
                 #print(type(ptree))
@@ -113,157 +113,75 @@ class LanguageModel:
                     self.get_bigram(tree[i], sentence)
             # For each terminal - string
             else:
-                #print("ptree: ", tree[i])
                 self.get_headword(tree, tree[i], sentence)
-
-    # # Node must be parented tree
-    # def get_headword(self, node, label, sentence):
-    #     if type(node) == str:
-    #         #print("wow", node)
-    #         try: #Sometimes, there are discrepancy btw ntlk tokenizer and stanford tokenizer
-    #             if sentence.index(label)-1 > -1:     
-    #             #Do bigram
-    #                 previous_word = sentence[sentence.index(label)-1]# Choose previous word
-    #                 #print("Done", previous_word, label)            
-    #                 self.headword_bigram_counts[(previous_word, label)] += 1  
-    #             updated_node = True
-    #         except:
-    #             pass
-    #         finally:
-    #             return
-    #     tag = node.label()
-    #     # print(node, tag)
-    #     while node.parent().label() != 'ROOT' and not node.left_sibling():
-    #     #     #print(node)
-    #         node = node.parent()
-    #     #print(node.label())
-    #     #node = node.parent()
-    #     #print("a",node.label())
-    #     updated_node = False
-    #     if node.parent().label() != 'ROOT': 
-    #         #print(node.label(), "label",label)
-
-    #         if node.parent().label() == "NP":
-    #             for sibling in self.get_left_siblings(node):         
-    #                 #print("NP: ",node.label())
-    #                 if type(sibling) is str:
-    #                     node = sibling
-    #                     updated_node = True
-    #                     break
-    #                 elif sibling.label() in ["NN", "NNS", "NNP", "NNPS", "PRP"]:
-    #                     node = sibling
-    #                     updated_node = True
-    #                     break
-    #         elif node.parent().label() == "VP":
-    #             #print(node.parent())
-    #             for sibling in self.get_left_siblings(node): 
-    #                 #print("sib",node.label(),sibling)
-    #                 if type(sibling) is str:
-    #                     node = sibling
-    #                     updated_node = True
-    #                     break
-    #                 elif sibling.label() in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]:
-    #                     node = sibling
-    #                     updated_node = True
-    #                     break
-    #     #         #Choose Verb
-    #         elif node.parent().label() ==  "VBZ" or node.parent().label() == "VBD":
-    #             #Choose W__ or N__
-    #             for sibling in self.get_left_siblings(node):  
-    #                 if type(sibling) is str:
-    #                     node = sibling
-    #                     updated_node = True
-    #                     break
-    #                 elif sibling.label()[0] in ["W", "N"]:
-    #                     node = sibling
-    #                     updated_node = True
-    #                     break
-    #         elif node.parent().label() ==  "IN" or  node.parent().label()[0] == "W" or node.parent().label() == "S":
-    #             if sentence.index(label)-1 > -1:     
-    #             #Do bigram
-    #                 previous_word = sentence[sentence.index(label)-1]# Choose previous word
-    #                 #print("Done", previous_word, label)            
-    #                 self.headword_bigram_counts[(previous_word, label)] += 1
-    #             return
-
-    #         if not updated_node:
-    #             #print("false. Choose next", node)
-    #             # Choose the rightmost tree
-
-    #             node = node.left_sibling()
-    #         self.get_headword(node, label, sentence)
             
     def get_headword(self, node, label, sentence):
-        if type(node) == str:
-            #print("wow", node)
-            previous_word = node
-            self.headword_bigram_counts[(previous_word, label)] += 1
-            print("wow", previous_word, label)     
-            updated_node = True
-            return
+
         tag = node.label()
         # print(node, tag)
-        while node.parent().label() != 'ROOT' and node.left_sibling() is not None:
-        #     #print(node)
+        while node.parent().label() != 'ROOT' and not node.left_sibling():
             node = node.parent()
-        #print(node.label())
-        #node = node.parent()
-        #print("label",node.label())
+        candidate_nodes = self.get_left_siblings(node)
+        parent_node = node.parent()
+        if candidate_nodes != []:
+            self.traverse(candidate_nodes,parent_node, label, sentence)
+    def get_childs(self, node):
+        all_child = []
+        for child in node:
+            all_child.append(child)
+        return all_child
+
+    def traverse(self, candidate_nodes,parent_node, label, sentence):
+        if len(candidate_nodes) == 1 and type(candidate_nodes[0]) is str:
+            #print("wow", node)
+            previous_word = candidate_nodes[0]
+            self.headword_bigram_counts[(previous_word, label)] += 1
+            #print("wow", previous_word, label)     
+            updated_node = True
+            return
+
         updated_node = False
-        if node.parent().label() != 'ROOT': 
+        if parent_node.label() != 'ROOT': 
             #print(node.label(), "label",label)
 
-            if node.parent().label() == "NP":
-                for sibling in self.get_left_siblings(node):         
-                    #print("NP: ",node.label())
-                    # if type(sibling) is str:
-                    #     node = sibling
-                    #     updated_node = True
-                    #     break
-                    if sibling.label() in ["NN", "NNS", "NNP", "NNPS", "PRP"]:
-                        node = sibling
+            if parent_node.label() == "NP":
+                for candidate in candidate_nodes:         
+                    if candidate.label() in ["NN", "NNS", "NNP", "NNPS", "PRP"]:
+                        node = candidate
                         updated_node = True
                         break
-            elif node.parent().label() == "VP":
+            elif parent_node.label() == "VP":
                 #print(node.parent())
-                for sibling in self.get_left_siblings(node): 
-                    #print("sib",node.label(),sibling)
-                    # if type(sibling) is str:
-                    #     node = sibling
-                    #     updated_node = True
-                    #     break
-                    if sibling.label() in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]:
-                        node = sibling
+                for candidate in candidate_nodes: 
+                    if candidate.label() in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]:
+                        node = candidate
                         updated_node = True
                         break
         #         #Choose Verb
-            elif node.parent().label() ==  "VBZ" or node.parent().label() == "VBD":
+            elif parent_node.label() ==  "VBZ" or parent_node.label() == "VBD":
                 #Choose W__ or N__
-                for sibling in self.get_left_siblings(node):  
-                    # if type(sibling) is str:
-                    #     node = sibling
-                    #     updated_node = True
-                    #     break
-                    if sibling.label()[0] in ["W", "N"]:
-                        node = sibling
+                for candidate in candidate_nodes:  
+                    if candidate.label()[0] in ["W", "N"]:
+                        node = candidate
                         updated_node = True
                         break
-            elif node.parent().label() ==  "IN" or  node.parent().label()[0] == "W" or node.parent().label() == "S":
+            elif parent_node.label() ==  "IN" or  parent_node.label()[0] == "W" or parent_node.label() == "S":
                 if sentence.index(label)-1 > -1:     
                 #Do bigram
                     previous_word = sentence[sentence.index(label)-1]# Choose previous word
-                    print("Done", previous_word, label)            
+                    #print("Done", previous_word, label)            
                     self.headword_bigram_counts[(previous_word, label)] += 1
                 return
 
-            if node.left_sibling() is None:
-                return
             if not updated_node:
-                print("false. Choose next", node)
                 # Choose the rightmost tree
+                #print(parent_node.label(), candidate_nodes)
+                node = candidate_nodes[-1]
+                #print("false. Choose next", node)
 
-                node = node.left_sibling()
-            self.get_headword(node, label, sentence)
+            candidate_nodes = self.get_childs(node)
+            if candidate_nodes!=[]:
+                self.traverse(candidate_nodes, node, label, sentence)
 
     def print_sentences(self, sentences):
         for sentence in sentences:
@@ -282,7 +200,7 @@ def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt', 100)
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 300)
     lm.train_corpus()
     # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
     # print("CC", lm.nonterminal_counts["CC"])
@@ -299,14 +217,14 @@ def main():
 
     #pickle
     #pickle the headword bigramsssdfsdf
-    with open("headword_bigram_100sibs.dat", "wb") as outFile:
+    with open("headword_bigram_300sibs.dat", "wb") as outFile:
         pickle.dump(lm.headword_bigram_probs, outFile)
     #pickle the probabilistic parser probs (in log)
-    with open("parser_probs_100sibs.dat", "wb") as outFile:
+    with open("parser_probs_300sibs.dat", "wb") as outFile:
         pickle.dump(lm.probabilistic_parser_probs, outFile)
 
     #pickle the grammar
-    with open("grammar_100sibs.dat", "wb") as outFile:
+    with open("grammar_300sibs.dat", "wb") as outFile:
         pickle.dump(lm.grammar, outFile)
     # for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
     #     tree.print_()
