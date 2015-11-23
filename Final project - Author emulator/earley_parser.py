@@ -9,6 +9,10 @@ class Rule():
     def __init__(self, name, *productions):
         self.name = name
         self.productions = list(productions)
+    def __repr__(self):
+        return "%s -> %s" % (self.name, " | ".join(repr(p) for p in self.productions))
+    def __str__(self):
+        return self.name
     def add(self, productions):
         self.productions.append(productions)
 
@@ -24,6 +28,8 @@ class Production():
         return len(self.terms)
     def __getitem__(self, index):
         return self.terms[index]
+    def __repr__(self):
+        return " ".join(str(t) for t in self.terms)
     def __iter__(self):
         return iter(self.terms)
     def __eq__(self, other):
@@ -139,7 +145,7 @@ class Earley_Parser():
                 else:
                     term = state.next_term()
                     if isinstance(term, Rule):
-                        if state.name == "ROOT" and len(state.production)==1 and state.production[0].name == "FRAG":
+                        if state.name == "ROOT" and len(state.production)==1 and (state.production[0].name == "FRAG" or state.production[0].name == "SBARQ"):
                             continue
                         predictWords = self.predict(col, term)
                         # AMONG THESE WORDS, which one has the highest bigram (top 2)
@@ -186,18 +192,3 @@ class Earley_Parser():
             #print("No tree was built. Not legal sentence")
             return topPredictedWord, sentenceComplete
             #sys.exit(1)
-
-
-
-def main():
-    with open("grammar.dat", 'rb') as handle:
-        grammar = pickle.loads(handle.read())
-    with open("parser_probs.dat", 'rb') as handle:
-        parser_probs = pickle.loads(handle.read())
-    with open("headword_bigram.dat", 'rb') as handle:
-        headword_bigram = pickle.loads(handle.read())    
-
-
-
-if __name__ == '__main__':
-    main()
