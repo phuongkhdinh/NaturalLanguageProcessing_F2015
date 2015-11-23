@@ -51,7 +51,7 @@ class LanguageModel:
                 #print(tree)
                 self.nonterminal_counts['ROOT'] = 1
                 tokenized_sentence = self.tokenize_sentence(sentence)
-                if len(tokenized_sentence) > 7:
+                if len(tokenized_sentence) > 4:
                     self.extract_rules(tree)
                 ptree = ParentedTree.convert(tree)
                 self.get_bigram(ptree, tokenized_sentence)
@@ -70,7 +70,8 @@ class LanguageModel:
             self.grammar[rule_name] = rule
         if type(tree[0]) == str:
             production_objects.append(tree[0])
-            rule.add(Production(tree[0]))
+            if (rule_name, tree[0]) not in self.probabilistic_parser_counts:
+                rule.add(Production(tree[0]))
             self.probabilistic_parser_counts[(rule_name, tree[0])] += 1
             self.terminal_counts[tree[0]] += 1
             return
@@ -87,7 +88,8 @@ class LanguageModel:
                     self.grammar[name] = child_rule
                     production_objects.append(child_rule)
 
-            rule.add(Production(tuple(production_objects)))
+            if (rule_name, tuple([obj.name for obj in production_objects])) not in self.probabilistic_parser_counts:
+                rule.add(Production(tuple(production_objects)))
             self.probabilistic_parser_counts[(rule_name, tuple([obj.name for obj in production_objects]))] += 1
 
 
@@ -267,7 +269,7 @@ def main():
     #sentences = tokenize_sentences()
     #print_sentences(sentences)
     lm = LanguageModel()
-    lm.parse_sentences('./hemingway/sentences/sea.txt', 130)
+    lm.parse_sentences('./hemingway/sentences/sea.txt', 200)
     lm.train_corpus()
     # print("count:", lm.probabilistic_parser_probs[("NN", "skiff")])
     # print("CC", lm.nonterminal_counts["CC"])
@@ -284,14 +286,14 @@ def main():
 
     #pickle
     #pickle the headword bigramsssdfsdf
-    with open("headword_bigram.dat", "wb") as outFile:
+    with open("headword_bigram200.dat", "wb") as outFile:
         pickle.dump(lm.headword_bigram_probs, outFile)
     #pickle the probabilistic parser probs (in log)
-    with open("parser_probs.dat", "wb") as outFile:
+    with open("parser_probs200.dat", "wb") as outFile:
         pickle.dump(lm.probabilistic_parser_probs, outFile)
 
     #pickle the grammar
-    with open("grammar.dat", "wb") as outFile:
+    with open("grammar200.dat", "wb") as outFile:
         pickle.dump(lm.grammar, outFile)
     # for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
     #     tree.print_()
