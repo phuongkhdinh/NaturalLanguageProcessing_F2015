@@ -1,12 +1,20 @@
-# An early Parser with some twist to work for prediction purpose
-# Reference from Charty project
-
+'''
+    Earley_Parser.py
+    Written for CS322 - Natural Language Processing Final project
+    By Julia Kroll and Phuong Dinh
+    An Early Parser with some twist to work for prediction purpose
+    Output the top 5 word guess to complete sentence
+    Some code are referenced from Charty project (http://www.cavar.me/damir/charty/python/)
+'''
 import sys
 import pickle
 from math import exp, log
 
 
 class Rule():
+    '''
+        Rule object, e.g NP -> DT NN
+    '''
     def __init__(self, name, *productions):
         self.name = name
         self.productions = list(productions)
@@ -17,6 +25,9 @@ class Rule():
 
 
 class Production():
+    '''
+        Production object (the RHS), e.g DT NN
+    '''
     def __init__(self, *terms):
         self.terms = terms
         if type(self.terms[0]) is tuple:
@@ -41,6 +52,9 @@ class Production():
         return hash(self.terms)
 
 class State():
+    '''
+        Represent each row of a chart
+    '''
     def __init__(self, name, production, dot_index, start_column):
         self.name = name
         self.production = production
@@ -63,6 +77,9 @@ class State():
         return self.production[self.dot_index]
 
 class Column():
+    '''
+        Column of Earley parser chart
+    '''
     def __init__(self, index, token):
         self.index = index
         self.token = token
@@ -84,25 +101,18 @@ class Column():
             self.states.append(state)
             return True
         return False
-    def print_(self, completedOnly = False):
-        print("[%s] %r" % (self.index, self.token))
-        print("=" * 35)
-        for s in self.states:
-            if completedOnly and not s.completed():
-                continue
-            print(repr(s))
-        print()
 
 class Node():
     def __init__(self, value, children):
         self.value = value
         self.children = children
-    def print_(self, level = 0):
-        print("  " * level + str(self.value))
-        for child in self.children:
-            child.print_(level + 1)
 
 class Earley_Parser():
+    '''
+        The Earley Parser
+        With a twist, output the predicted word at the last column, 
+        on top of analyzing whether the sentence is grammatically correct
+    '''
     def __init__(self):
         self.GAMMA = "GAMMA"
 
@@ -131,24 +141,32 @@ class Earley_Parser():
     def parse(self, rule, text, parserProbs, headwordBigram):
         table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
         table[0].add(State(self.GAMMA, Production(rule), 0, table[0]))
+        # Initiate the chart with Gamma -> Root
         parserProbs[('GAMMA', ('ROOT',))] = 0.0
         ruleTransProbMatrix = {}
         predictWordProbMatrix = {}
 
         for i, col in enumerate(table):
-            #predictedWords = set()
 
             for state in col:
+                #Complete rule
                 if state.completed():
                     self.complete(col, state)
                 else:
                     term = state.next_term()
                     if isinstance(term, Rule):
-                        if state.name == "ROOT" and len(state.production)==1 and (state.production[0].name == "FRAG" or state.production[0].name == "SBARQ"):
+
+                        # Take out broken sentence rules
+                        if state.name == "ROOT" and len(state.production)==1 and \
+                            (state.production[0].name == "FRAG" or state.production[0].name == "SBARQ"):
                             continue
+
+                        # Run predict rules    
                         predictWords = self.predict(col, term)
-                        # AMONG THESE WORDS, which one has the highest bigram (top 2)
-                        #print(i)
+
+                        ### Find the probability of the words appearing next
+                        ### Using ruleTransProb, wordEmissionProb, and bigramTransProb
+                        ### Since all value are log, the * become +
                         if i==len(text.split())-1:
                             stateij = (state.name, tuple([obj.name for obj in state.production]))
                             ruleTransProb = parserProbs[stateij]
@@ -156,12 +174,10 @@ class Earley_Parser():
                             #predictWordProbMatrix[]
                             for word in predictWords:
                                 wordEmissionProb =  parserProbs[(term.name, word)]
-                                #print(text.split()[i],word)
                                 if (text.split()[i],word) in headwordBigram:
                                     bigramTransProb = headwordBigram[(text.split()[i],word)]
                                 else:
-                                    bigramTransProb = -15
-                                #print(ruleTransProb,wordEmissionProb, bigramTransProb)
+                                    bigramTransProb = -17 #Discount if the word never appear
                                 wordProb = ruleTransProb + wordEmissionProb + bigramTransProb
 
                                 if word in predictWordProbMatrix:
@@ -169,7 +185,7 @@ class Earley_Parser():
                                 else:
                                     predictWordProbMatrix[word] = wordProb
 
-
+                    # Scan rule
                     elif i + 1 < len(table):
                         self.scan(table[i+1], state, term)
             
@@ -181,10 +197,11 @@ class Earley_Parser():
 
 
         sentenceComplete = False
-        for st in table[-1]:
-            if st.name == self.GAMMA and st.completed():
-                #return st
+        for state in table[-1]: #The sentence is parsable (complete using our grammar)
+            if state.name == self.GAMMA and state.completed():
                 sentenceComplete = True
                 return topPredictedWord, sentenceComplete
         else:
             return topPredictedWord, sentenceComplete
+
+
