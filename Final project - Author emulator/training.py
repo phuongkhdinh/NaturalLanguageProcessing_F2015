@@ -32,11 +32,13 @@ class LanguageModel:
 
 
     def tokenize_sentence(self, sentence):
+        """Parses a string sentence into a list of tokens"""
         tokenized_sentence = word_tokenize(sentence)
         return tokenized_sentence
 
     def parse_sentences(self, filename, num_sentences):
-        """Parse each sentence into a tree"""
+        """Parses each one-line sentence into a syntax tree"""
+        # Open the file and parse a given number of sentences
         f = open(filename, 'r')
         if num_sentences == 'all':
             num_sentences = -1
@@ -44,18 +46,26 @@ class LanguageModel:
         for sentence in f.readlines()[:num_sentences]:
             if count%10==0:
                 print("Number of sentences trained: ",count)
+            # Get possible parse trees
             trees = self.parser.raw_parse(sentence.lower())
             for tree in trees:
                 self.nonterminal_counts['ROOT'] += 1
                 tokenized_sentence = self.tokenize_sentence(sentence)
+                # Only extract rules from sentences with greater than 8 tokens,
+                # to avoid adding rules that generate short, ungrammatical sentences
                 if len(tokenized_sentence) > 8:
                     self.extract_rules(tree)
+                # Convert the tree into a ParentedTree, 
+                # which is an NLTK tree that keeps pointers to each node's parent
                 ptree = ParentedTree.convert(tree)
-                #print(type(ptree))
+                # Calculate the bigram counts for this sentence
                 self.get_bigram(ptree, tokenized_sentence)
             count+=1
 
     def extract_rules(self, tree):
+        """Given the parse tree of a sentence,
+           extract all of the grammar rules it contains
+           in order to build a PCFG."""
         rule_name = tree.label()
         rule = None
         production_objects = []
@@ -88,60 +98,65 @@ class LanguageModel:
 
             if (rule_name, tuple([obj.name for obj in production_objects])) not in self.probabilistic_parser_counts:
                 for obj in production_objects:
+                    # Ignore rules with FRAG (sentence fragment) tags
                     if obj.name == "FRAG":
                         return
                 rule.add(Production(tuple(production_objects)))
             self.probabilistic_parser_counts[(rule_name, tuple([obj.name for obj in production_objects]))] += 1
 
     def get_left_siblings(self, node):
+        """Takes in a ParentedTree node and returns a list of all its left sibling nodes"""
         left_siblings = []
         while node.left_sibling() is not None:
             left_siblings.append(node.left_sibling())
             node = node.left_sibling()
         return left_siblings
 
-
-
     def get_bigram(self, tree, sentence):
+        """Given a node and a string sentence,
+           get the node's headword and add the
+           headword and current word to bigram counts"""
         # For each child
         for i in range(len(tree)):
-            #print("tree len", len(tree))
+            # If the child is not a terminal:
             if type(tree[i]) != str:
                 if len(tree[i]) > 0:
                     self.get_bigram(tree[i], sentence)
-            # For each terminal - string
+            # Else the child is a terminal:
             else:
                 self.get_headword(tree, tree[i], sentence)
             
     def get_headword(self, node, label, sentence):
-
+        """Get the headword given a node, original terminal's label,
+           and the sentence the terminal appears in."""
         tag = node.label()
-        # print(node, tag)
+        # Traverse up the tree until a node with a left sibling is found
         while node.parent().label() != 'ROOT' and not node.left_sibling():
             node = node.parent()
         candidate_nodes = self.get_left_siblings(node)
         parent_node = node.parent()
         if candidate_nodes != []:
             self.traverse(candidate_nodes,parent_node, label, sentence)
-    def get_childs(self, node):
-        all_child = []
+
+    def get_children(self, node):
+        """Returns a list of all children of a given node"""
+        all_children = []
         for child in node:
-            all_child.append(child)
-        return all_child
+            all_children.append(child)
+        return all_children
 
     def traverse(self, candidate_nodes,parent_node, label, sentence):
+        """Traverse the tree in search of the best possible headword 
+           given the original candidate node and its label"""
+
         if len(candidate_nodes) == 1 and type(candidate_nodes[0]) is str:
-            #print("wow", node)
             previous_word = candidate_nodes[0]
             self.headword_bigram_counts[(previous_word, label)] += 1
-            #print("wow", previous_word, label)     
             updated_node = True
             return
 
         updated_node = False
         if parent_node.label() != 'ROOT': 
-            #print(node.label(), "label",label)
-
             if parent_node.label() == "NP":
                 for candidate in candidate_nodes:         
                     if candidate.label() in ["NN", "NNS", "NNP", "NNPS", "PRP"]:
@@ -149,15 +164,12 @@ class LanguageModel:
                         updated_node = True
                         break
             elif parent_node.label() == "VP":
-                #print(node.parent())
                 for candidate in candidate_nodes: 
                     if candidate.label() in ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]:
                         node = candidate
                         updated_node = True
                         break
-        #         #Choose Verb
             elif parent_node.label() ==  "VBZ" or parent_node.label() == "VBD":
-                #Choose W__ or N__
                 for candidate in candidate_nodes:  
                     if candidate.label()[0] in ["W", "N"]:
                         node = candidate
@@ -165,29 +177,21 @@ class LanguageModel:
                         break
             elif parent_node.label() ==  "IN" or  parent_node.label()[0] == "W" or parent_node.label() == "S":
                 if sentence.index(label)-1 > -1:     
-                #Do bigram
-                    previous_word = sentence[sentence.index(label)-1]# Choose previous word
-                    #print("Done", previous_word, label)            
+                    previous_word = sentence[sentence.index(label)-1]   
                     self.headword_bigram_counts[(previous_word, label)] += 1
                 return
 
             if not updated_node:
-                # Choose the rightmost tree
-                #print(parent_node.label(), candidate_nodes)
+                # No better headword has been found, so just choose the rightmost left sibling
                 node = candidate_nodes[-1]
-                #print("false. Choose next", node)
 
-            candidate_nodes = self.get_childs(node)
+            candidate_nodes = self.get_children(node)
             if candidate_nodes!=[]:
                 self.traverse(candidate_nodes, node, label, sentence)
 
-    def print_sentences(self, sentences):
-        for sentence in sentences:
-            print(sentence)
-
     def train_corpus(self):
+        """Build PCFG and bigram headword models"""
         for item in self.probabilistic_parser_counts: #probabilitistic_parser[(LHS, RHS as tuple)] = 0.55
-            #print(item[0])
             if item[0] in self.nonterminal_counts and item in self.probabilistic_parser_counts:
                 self.probabilistic_parser_probs[item] = log(self.probabilistic_parser_counts[item]) - log(self.nonterminal_counts[item[0]])
         for bigram in self.headword_bigram_counts: #headword_bigram[(word1, word2)] = 0.55
@@ -196,39 +200,32 @@ class LanguageModel:
 
 def main():
 
-    #Take user input as corpus
+    # Take the corpus filename as user input
     try:
         if len(sys.argv) == 2:
             corpus = sys.argv[1]
         elif len(sys.argv) == 1:
-            corpus = 'hemingway.txt' #Our default corpus if user does not enter corpus
+            corpus = 'hemingway.txt' # Our default corpus if the user does not enter corpus
         else:
-            print("ERROR: The program accept either 0 or 1 argument. \npython3 training.py [corpus.txt]")
+            print("ERROR: The program accept either 0 or 1 arguments. \npython3 training.py [corpus.txt]")
             sys.exit()
         lm = LanguageModel()
-        lm.parse_sentences(corpus, 250) #Training 250 sentence as default
+        lm.parse_sentences(corpus, 250) # Trains 250 sentence as default
         lm.train_corpus()
     except:
         print("ERROR: Cannot parse user input file.")
         sys.exit(1)
 
 
-    #pickle
-    #pickle the headword bigramsssdfsdf
+    # Pickle the three completed models for use in predictor.py
     with open("headword_bigram_250_USER.dat", "wb") as outFile:
         pickle.dump(lm.headword_bigram_probs, outFile)
-    #pickle the probabilistic parser probs (in log)
     with open("parser_probs_250_USER.dat", "wb") as outFile:
         pickle.dump(lm.probabilistic_parser_probs, outFile)
-
-    #pickle the grammar
     with open("grammar_250_USER.dat", "wb") as outFile:
         pickle.dump(lm.grammar, outFile)
-    # for tree in build_trees(parse(lm.grammar["ROOT"], "he was an old man")):
-    #     tree.print_()
-    print("grammar_250_USER.dat, parser_probs_250_USER.dat and headword_bigram_250_USER.dat are created successfully.")
-    
 
+    print("grammar_250_USER.dat, parser_probs_250_USER.dat and headword_bigram_250_USER.dat are created successfully.")
 
 if __name__ == '__main__':
     main()
