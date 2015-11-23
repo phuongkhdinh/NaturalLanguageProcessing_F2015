@@ -25,14 +25,6 @@ class LanguageModel:
         self.probabilistic_parser_probs = {}
         self.headword_bigram_probs = {}
 
-    def tokenize_sentences(self):
-        """Tokenize corpus into sentences"""
-        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
-        f = open("hemingway/full_text/winner_take_nothing.txt")
-        data = f.read()
-        sentences = tokenizer.tokenize(data)
-        return sentences
-
     def tokenize_sentence(self, sentence):
         tokenized_sentence = word_tokenize(sentence)
         return tokenized_sentence
