@@ -1,5 +1,9 @@
 README.txt
 
+Author Emulator
+CS322-Natural Language Processing
+By Julia Kroll and Phuong Dinh
+
 This program generates original sentences in the style of an author. We hoped to preserve a high level of originality by using a bigram model to generate new sentences, but incorporate a parser into the algorithm in order to produce sentences that were grammatical as well as novel.
 
 - To train a new corpus, run:
