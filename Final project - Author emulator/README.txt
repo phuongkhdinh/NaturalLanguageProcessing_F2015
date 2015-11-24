@@ -7,7 +7,7 @@ By Julia Kroll and Phuong Dinh
 This program generates original sentences in the style of an author. We hoped to preserve a high level of originality by using a bigram model to generate new sentences, but incorporate a parser into the algorithm in order to produce sentences that were grammatical as well as novel.
 
 - To train a new corpus, run:
-python3 parse.py [corpus.txt] 
+python3 training.py [corpus.txt] 
 (corpus.txt is optional)
 If a corpus is not given, the program will use our default hemingway.txt
 
