@@ -17,6 +17,7 @@ from earley_parser import *
 from collections import Counter
 from math import log
 import pickle
+from clean_corpus import clean_corpus
 
 class LanguageModel:
 
@@ -210,8 +211,9 @@ def main():
             print("ERROR: The program accept either 0 or 1 arguments. \npython3 training.py [corpus.txt]")
             sys.exit()
         lm = LanguageModel()
-        lm.parse_sentences(corpus, 250) # Trains 250 sentence as default
-        lm.train_corpus()
+        cleaned_corpus = clean_corpus(corpus)
+        lm.parse_sentences(cleaned_corpus, 250) # Trains 250 sentence as default
+        lm.train_corpus(cleaned_corpus)
     except:
         print("ERROR: Cannot parse user input file.")
         sys.exit(1)
