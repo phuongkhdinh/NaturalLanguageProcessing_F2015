@@ -47,7 +47,7 @@ def readInput():
         parser_probs_file = "parser_probs_250sibs.dat"
         headword_bigram_file = "headword_bigram_250sibs.dat"
     else:
-        print("ERROR: The program accept either 0 or 3 argument. \npython3 predictor.py [grammar.txt PCFG.txt bigram.txt]")
+        print("ERROR: The program accept either 0 or 3 argument. \npython3 predictor.py [grammar.dat PCFG.dat bigram.dat]")
         sys.exit()
     #try:
 
